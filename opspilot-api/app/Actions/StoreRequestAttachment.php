@@ -7,6 +7,7 @@ use App\Models\RequestAttachment;
 use App\Models\RequestSubmission;
 use App\Models\User;
 use App\Support\RequestActivityRecorder;
+use App\Support\RequestNotificationDispatcher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,10 @@ use Throwable;
 
 class StoreRequestAttachment
 {
-    public function __construct(private RequestActivityRecorder $activities) {}
+    public function __construct(
+        private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
+    ) {}
 
     public function handle(RequestSubmission $submission, User $uploader, UploadedFile $file): RequestAttachment
     {
@@ -47,6 +51,7 @@ class StoreRequestAttachment
                     actor: $uploader,
                     attachment: $attachment,
                 );
+                $this->notifications->attachmentUploaded($attachment);
 
                 return $attachment;
             });

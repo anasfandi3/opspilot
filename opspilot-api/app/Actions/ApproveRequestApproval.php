@@ -11,6 +11,7 @@ use App\Models\RequestType;
 use App\Models\User;
 use App\Support\RequestActivityRecorder;
 use App\Support\RequestApprovalAccess;
+use App\Support\RequestNotificationDispatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +20,7 @@ class ApproveRequestApproval
     public function __construct(
         private RequestApprovalAccess $access,
         private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
     ) {}
 
     public function handle(RequestApproval $approval, User $actor): RequestApproval
@@ -72,6 +74,7 @@ class ApproveRequestApproval
                     approval: $next,
                     metadata: ['workflow_step_id' => $nextStep->id, 'workflow_step_name' => $nextStep->name],
                 );
+                $this->notifications->approvalActivated($next);
             } else {
                 $submission->forceFill([
                     'status' => RequestStatus::Approved,
@@ -82,6 +85,7 @@ class ApproveRequestApproval
                     RequestActivityType::RequestApproved,
                     actor: $actor,
                 );
+                $this->notifications->requestApproved($submission);
             }
 
             return $locked->refresh();

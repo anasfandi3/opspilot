@@ -10,12 +10,16 @@ use App\Models\RequestSubmission;
 use App\Models\RequestType;
 use App\Models\User;
 use App\Support\RequestActivityRecorder;
+use App\Support\RequestNotificationDispatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CancelRequest
 {
-    public function __construct(private RequestActivityRecorder $activities) {}
+    public function __construct(
+        private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
+    ) {}
 
     public function handle(RequestSubmission $submission, User $actor): RequestSubmission
     {
@@ -26,6 +30,7 @@ class CancelRequest
                 throw ValidationException::withMessages(['request' => 'This request cannot be cancelled.']);
             }
 
+            $pendingApproval = null;
             if ($locked->status === RequestStatus::Submitted) {
                 $openApprovals = RequestApproval::query()
                     ->where('request_submission_id', $locked->id)
@@ -34,6 +39,9 @@ class CancelRequest
                     ->orderBy('id')
                     ->lockForUpdate()
                     ->get();
+                $pendingApproval = $openApprovals->first(
+                    fn (RequestApproval $approval): bool => $approval->status === RequestApprovalStatus::Pending,
+                );
                 foreach ($openApprovals as $approval) {
                     $approval->forceFill([
                         'status' => RequestApprovalStatus::Cancelled,
@@ -51,6 +59,9 @@ class CancelRequest
                 RequestActivityType::RequestCancelled,
                 actor: $actor,
             );
+            if ($pendingApproval) {
+                $this->notifications->requestCancelled($locked, $pendingApproval, $actor);
+            }
 
             return $locked->refresh();
         }, attempts: 3);

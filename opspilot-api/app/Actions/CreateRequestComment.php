@@ -7,11 +7,15 @@ use App\Models\RequestComment;
 use App\Models\RequestSubmission;
 use App\Models\User;
 use App\Support\RequestActivityRecorder;
+use App\Support\RequestNotificationDispatcher;
 use Illuminate\Support\Facades\DB;
 
 class CreateRequestComment
 {
-    public function __construct(private RequestActivityRecorder $activities) {}
+    public function __construct(
+        private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
+    ) {}
 
     public function handle(RequestSubmission $submission, User $author, string $body): RequestComment
     {
@@ -28,6 +32,7 @@ class CreateRequestComment
                 actor: $author,
                 comment: $comment,
             );
+            $this->notifications->commentAdded($comment);
 
             return $comment;
         });

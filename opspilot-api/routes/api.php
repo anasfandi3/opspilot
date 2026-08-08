@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\RequestActivityController;
 use App\Http\Controllers\Api\V1\RequestApprovalController;
@@ -28,6 +29,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('me', [ProfileController::class, 'show'])->name('me.show');
         Route::patch('me', [ProfileController::class, 'update'])->name('me.update');
         Route::put('me/password', [ProfileController::class, 'updatePassword'])->name('me.password.update');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread_count');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read_all');
+        Route::patch('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+        Route::patch('notifications/{notification}/unread', [NotificationController::class, 'markUnread'])->name('notifications.unread');
 
         Route::middleware('workspace.context')->group(function (): void {
             Route::post('invitations/{token}/accept', [WorkspaceInvitationController::class, 'accept'])->name('invitations.accept');

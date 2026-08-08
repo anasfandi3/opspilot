@@ -24,6 +24,7 @@ use App\Support\RequestActivityRecorder;
 use App\Support\WorkspacePermissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use RuntimeException;
@@ -123,20 +124,24 @@ class RequestActivityTest extends TestCase
             'published_at' => now(),
         ]);
         $failed = $this->createDraft($invalidWorkspace, $invalidType, $invalidRequester);
+        Notification::fake();
         $this->postJson($this->submitUrl($invalidWorkspace, $failed))->assertUnprocessable();
         $this->assertSame(['request_created'], $failed->activities()->pluck('type')->map->value->all());
         $this->assertSame(RequestStatus::Draft, $failed->fresh()->status);
         $this->assertSame(0, $failed->approvals()->count());
+        Notification::assertNothingSent();
     }
 
     public function test_failed_rejection_rolls_back_state_and_all_rejection_activity(): void
     {
+        Notification::fake();
         [$owner, $workspace, $requester, $type, $workflow] = $this->definition();
         $this->roleStep($workflow, 1);
         $submission = $this->createDraft($workspace, $type, $requester);
         $this->postJson($this->submitUrl($workspace, $submission))->assertOk();
         $approval = $submission->approvals()->firstOrFail();
         $before = $submission->activities()->count();
+        Notification::fake();
         $this->mock(RequestActivityRecorder::class, function (MockInterface $mock): void {
             $mock->shouldReceive('record')->once()->andThrow(new RuntimeException('audit write failed'));
         });
@@ -155,6 +160,7 @@ class RequestActivityTest extends TestCase
             RequestActivityType::ApprovalRejected,
             RequestActivityType::RequestRejected,
         ])->count());
+        Notification::assertNothingSent();
     }
 
     public function test_timeline_is_newest_first_paginated_rich_private_and_view_authorized(): void

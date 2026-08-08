@@ -26,6 +26,7 @@ use App\Support\RequestActivityRecorder;
 use App\Support\WorkspacePermissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use RuntimeException;
@@ -230,6 +231,7 @@ class RequestCollaborationTest extends TestCase
 
     public function test_attachment_database_failure_rolls_back_row_activity_and_stored_file(): void
     {
+        Notification::fake();
         Storage::fake('local');
         [, $workspace, $requester, $type] = $this->definition();
         $submission = $this->submission($workspace, $type, $requester);
@@ -251,10 +253,12 @@ class RequestCollaborationTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles());
         $this->assertSame(0, RequestAttachment::query()->count());
         $this->assertSame(0, RequestActivity::query()->count());
+        Notification::assertNothingSent();
     }
 
     public function test_comment_activity_failure_rolls_back_both_comment_and_activity(): void
     {
+        Notification::fake();
         [, $workspace, $requester, $type] = $this->definition();
         $submission = $this->submission($workspace, $type, $requester);
         $this->mock(RequestActivityRecorder::class, function (MockInterface $mock): void {
@@ -270,6 +274,7 @@ class RequestCollaborationTest extends TestCase
 
         $this->assertSame(0, RequestComment::query()->count());
         $this->assertSame(0, RequestActivity::query()->count());
+        Notification::assertNothingSent();
     }
 
     /** @return array{User, Workspace, User, RequestType, Workflow} */

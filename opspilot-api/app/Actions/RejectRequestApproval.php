@@ -11,6 +11,7 @@ use App\Models\RequestType;
 use App\Models\User;
 use App\Support\RequestActivityRecorder;
 use App\Support\RequestApprovalAccess;
+use App\Support\RequestNotificationDispatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +20,7 @@ class RejectRequestApproval
     public function __construct(
         private RequestApprovalAccess $access,
         private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
     ) {}
 
     public function handle(RequestApproval $approval, User $actor): RequestApproval
@@ -71,6 +73,7 @@ class RejectRequestApproval
                 RequestActivityType::RequestRejected,
                 actor: $actor,
             );
+            $this->notifications->requestRejected($submission, $locked, $actor);
 
             return $locked->refresh();
         }, attempts: 3);

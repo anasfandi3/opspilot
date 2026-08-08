@@ -9,6 +9,7 @@ use App\Models\RequestSubmission;
 use App\Models\RequestType;
 use App\Models\RequestTypeField;
 use App\Support\RequestActivityRecorder;
+use App\Support\RequestNotificationDispatcher;
 use App\Support\RequestPayloadValidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +20,7 @@ class SubmitRequest
         private RequestPayloadValidator $validator,
         private InitializeRequestApprovals $initializeApprovals,
         private RequestActivityRecorder $activities,
+        private RequestNotificationDispatcher $notifications,
     ) {}
 
     public function handle(RequestSubmission $submission): RequestSubmission
@@ -72,8 +74,10 @@ class SubmitRequest
                     approval: $activatedApproval,
                     metadata: ['workflow_step_id' => $step->id, 'workflow_step_name' => $step->name],
                 );
+                $this->notifications->approvalActivated($activatedApproval);
             } else {
                 $this->activities->record($locked, RequestActivityType::RequestApproved);
+                $this->notifications->requestApproved($locked);
             }
 
             return $locked->refresh();
