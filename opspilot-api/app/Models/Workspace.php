@@ -63,4 +63,19 @@ class Workspace extends Model
     {
         return $this->hasMany(RequestApproval::class);
     }
+
+    public function requestComments(): HasMany
+    {
+        return $this->hasMany(RequestComment::class);
+    }
+
+    public function requestAttachments(): HasMany
+    {
+        return $this->hasMany(RequestAttachment::class);
+    }
+
+    public function requestActivities(): HasMany
+    {
+        return $this->hasMany(RequestActivity::class);
+    }
 }

@@ -60,6 +60,21 @@ class User extends Authenticatable
         return $this->hasMany(RequestApproval::class, 'decided_by');
     }
 
+    public function requestComments(): HasMany
+    {
+        return $this->hasMany(RequestComment::class, 'author_id');
+    }
+
+    public function uploadedRequestAttachments(): HasMany
+    {
+        return $this->hasMany(RequestAttachment::class, 'uploaded_by');
+    }
+
+    public function requestActivities(): HasMany
+    {
+        return $this->hasMany(RequestActivity::class, 'actor_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

@@ -88,7 +88,7 @@ class RequestSubmissionController extends Controller
     ): JsonResponse {
         Gate::authorize('cancel', $requestSubmission);
 
-        return $this->response($request, $action->handle($requestSubmission), 'Request cancelled successfully.');
+        return $this->response($request, $action->handle($requestSubmission, $request->user()), 'Request cancelled successfully.');
     }
 
     /** @return list<string> */

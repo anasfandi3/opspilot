@@ -46,6 +46,21 @@ class RequestSubmission extends Model
         return $this->hasMany(RequestApproval::class)->orderBy('position')->orderBy('id');
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(RequestComment::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(RequestAttachment::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(RequestActivity::class);
+    }
+
     protected function casts(): array
     {
         return [

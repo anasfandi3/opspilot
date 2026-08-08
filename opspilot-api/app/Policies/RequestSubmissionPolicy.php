@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\RequestStatus;
 use App\Enums\WorkspacePermission;
+use App\Enums\WorkspaceRole;
 use App\Models\RequestSubmission;
 use App\Models\User;
 use App\Models\Workspace;
@@ -64,5 +65,26 @@ class RequestSubmissionPolicy
         return $submission->created_by === $user->id
             && in_array($submission->status, [RequestStatus::Draft, RequestStatus::Submitted], true)
             && $this->permissions->allows($user, $submission->workspace, WorkspacePermission::RequestsCancelOwn);
+    }
+
+    public function collaborate(User $user, RequestSubmission $submission): bool
+    {
+        $workspace = $submission->workspace;
+        if ($workspace->membershipFor($user) === null) {
+            return false;
+        }
+
+        if ($submission->created_by === $user->id
+            && $this->permissions->allows($user, $workspace, WorkspacePermission::RequestsViewOwn)) {
+            return true;
+        }
+
+        if ($this->permissions->allows($user, $workspace, WorkspacePermission::ApprovalsViewAssigned)
+            && $submission->approvals()->whereHas('assignees', fn ($query) => $query->whereBelongsTo($user))->exists()) {
+            return true;
+        }
+
+        return in_array($this->permissions->role($user, $workspace), [WorkspaceRole::Owner, WorkspaceRole::Admin], true)
+            && $this->viewAll($user, $workspace);
     }
 }

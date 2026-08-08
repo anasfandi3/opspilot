@@ -31,6 +31,7 @@ class RequestSubmissionFactory extends Factory
             'definition_snapshot' => null,
             'submitted_at' => null,
             'cancelled_at' => null,
+            'resolved_at' => null,
         ];
     }
 }

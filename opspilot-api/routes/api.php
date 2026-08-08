@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\RequestActivityController;
 use App\Http\Controllers\Api\V1\RequestApprovalController;
+use App\Http\Controllers\Api\V1\RequestAttachmentController;
 use App\Http\Controllers\Api\V1\RequestCatalogController;
+use App\Http\Controllers\Api\V1\RequestCommentController;
 use App\Http\Controllers\Api\V1\RequestSubmissionController;
 use App\Http\Controllers\Api\V1\RequestTypeController;
 use App\Http\Controllers\Api\V1\RequestTypeFieldController;
@@ -54,6 +57,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::patch('workspaces/{workspace}/requests/{requestSubmission}', [RequestSubmissionController::class, 'update'])->name('workspaces.requests.update');
                 Route::post('workspaces/{workspace}/requests/{requestSubmission}/submit', [RequestSubmissionController::class, 'submit'])->name('workspaces.requests.submit');
                 Route::post('workspaces/{workspace}/requests/{requestSubmission}/cancel', [RequestSubmissionController::class, 'cancel'])->name('workspaces.requests.cancel');
+                Route::get('workspaces/{workspace}/requests/{requestSubmission}/comments', [RequestCommentController::class, 'index'])->name('workspaces.requests.comments.index');
+                Route::post('workspaces/{workspace}/requests/{requestSubmission}/comments', [RequestCommentController::class, 'store'])->name('workspaces.requests.comments.store');
+                Route::get('workspaces/{workspace}/requests/{requestSubmission}/attachments', [RequestAttachmentController::class, 'index'])->name('workspaces.requests.attachments.index');
+                Route::post('workspaces/{workspace}/requests/{requestSubmission}/attachments', [RequestAttachmentController::class, 'store'])->name('workspaces.requests.attachments.store');
+                Route::get('workspaces/{workspace}/requests/{requestSubmission}/attachments/{attachment}/download', [RequestAttachmentController::class, 'download'])->name('workspaces.requests.attachments.download');
+                Route::get('workspaces/{workspace}/requests/{requestSubmission}/activity', [RequestActivityController::class, 'index'])->name('workspaces.requests.activity.index');
                 Route::get('workspaces/{workspace}/approvals', [RequestApprovalController::class, 'index'])->name('workspaces.approvals.index');
                 Route::get('workspaces/{workspace}/approvals/{approval}', [RequestApprovalController::class, 'show'])->name('workspaces.approvals.show');
                 Route::post('workspaces/{workspace}/approvals/{approval}/approve', [RequestApprovalController::class, 'approve'])->name('workspaces.approvals.approve');

@@ -41,6 +41,11 @@ class RequestApproval extends Model
         return $this->belongsTo(User::class, 'decided_by');
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(RequestActivity::class);
+    }
+
     protected function casts(): array
     {
         return [

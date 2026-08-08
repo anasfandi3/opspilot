@@ -15,6 +15,11 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'attachments' => [
+        'disk' => env('REQUEST_ATTACHMENT_DISK', 'local'),
+        'max_kb' => (int) env('REQUEST_ATTACHMENT_MAX_KB', 10240),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

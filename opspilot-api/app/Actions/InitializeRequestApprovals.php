@@ -19,7 +19,7 @@ class InitializeRequestApprovals
         private ApprovalAssigneeResolver $assignees,
     ) {}
 
-    public function handle(RequestSubmission $submission, Workflow $workflow): bool
+    public function handle(RequestSubmission $submission, Workflow $workflow): ?RequestApproval
     {
         $workflow->loadMissing(['workspace', 'steps.conditions.requestTypeField']);
         if ($workflow->steps->isEmpty()) {
@@ -42,7 +42,7 @@ class InitializeRequestApprovals
         }
 
         if ($firstApplicable === null) {
-            return false;
+            return null;
         }
 
         $firstApplicable->forceFill([
@@ -51,7 +51,7 @@ class InitializeRequestApprovals
             'activated_at' => now(),
         ])->save();
 
-        return true;
+        return $firstApplicable;
     }
 
     private function createApproval(RequestSubmission $submission, WorkflowStep $step, bool $applies): RequestApproval

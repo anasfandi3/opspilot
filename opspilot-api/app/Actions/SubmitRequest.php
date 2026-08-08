@@ -2,11 +2,13 @@
 
 namespace App\Actions;
 
+use App\Enums\RequestActivityType;
 use App\Enums\RequestStatus;
 use App\Enums\WorkflowStatus;
 use App\Models\RequestSubmission;
 use App\Models\RequestType;
 use App\Models\RequestTypeField;
+use App\Support\RequestActivityRecorder;
 use App\Support\RequestPayloadValidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -16,6 +18,7 @@ class SubmitRequest
     public function __construct(
         private RequestPayloadValidator $validator,
         private InitializeRequestApprovals $initializeApprovals,
+        private RequestActivityRecorder $activities,
     ) {}
 
     public function handle(RequestSubmission $submission): RequestSubmission
@@ -49,11 +52,29 @@ class SubmitRequest
                 'submitted_at' => now(),
             ]);
 
-            $hasApplicableApproval = $this->initializeApprovals->handle($locked, $workflow);
+            $activatedApproval = $this->initializeApprovals->handle($locked, $workflow);
             $locked->forceFill([
-                'status' => $hasApplicableApproval ? RequestStatus::Submitted : RequestStatus::Approved,
-                'resolved_at' => $hasApplicableApproval ? null : now(),
+                'status' => $activatedApproval ? RequestStatus::Submitted : RequestStatus::Approved,
+                'resolved_at' => $activatedApproval ? null : now(),
             ])->save();
+            $creator = $locked->creator()->firstOrFail();
+            $this->activities->record(
+                $locked,
+                RequestActivityType::RequestSubmitted,
+                actor: $creator,
+                metadata: ['workflow_id' => $workflow->id, 'workflow_version' => $workflow->version],
+            );
+            if ($activatedApproval) {
+                $step = $activatedApproval->workflowStep()->firstOrFail();
+                $this->activities->record(
+                    $locked,
+                    RequestActivityType::ApprovalActivated,
+                    approval: $activatedApproval,
+                    metadata: ['workflow_step_id' => $step->id, 'workflow_step_name' => $step->name],
+                );
+            } else {
+                $this->activities->record($locked, RequestActivityType::RequestApproved);
+            }
 
             return $locked->refresh();
         }, attempts: 3);
