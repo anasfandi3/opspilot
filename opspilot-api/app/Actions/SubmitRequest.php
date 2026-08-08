@@ -13,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class SubmitRequest
 {
-    public function __construct(private RequestPayloadValidator $validator) {}
+    public function __construct(
+        private RequestPayloadValidator $validator,
+        private InitializeRequestApprovals $initializeApprovals,
+    ) {}
 
     public function handle(RequestSubmission $submission): RequestSubmission
     {
@@ -34,12 +37,22 @@ class SubmitRequest
 
             $requestType->setRelation('fields', $requestType->fields()->lockForUpdate()->get());
             $this->validator->validateSubmission($requestType, $locked->payload);
+            $workflow->setRelation(
+                'steps',
+                $workflow->steps()->with('conditions.requestTypeField')->lockForUpdate()->get(),
+            );
+            $workflow->setRelation('workspace', $requestType->workspace()->firstOrFail());
 
             $locked->forceFill([
                 'workflow_id' => $workflow->id,
-                'status' => RequestStatus::Submitted,
                 'definition_snapshot' => $this->snapshot($requestType),
                 'submitted_at' => now(),
+            ]);
+
+            $hasApplicableApproval = $this->initializeApprovals->handle($locked, $workflow);
+            $locked->forceFill([
+                'status' => $hasApplicableApproval ? RequestStatus::Submitted : RequestStatus::Approved,
+                'resolved_at' => $hasApplicableApproval ? null : now(),
             ])->save();
 
             return $locked->refresh();

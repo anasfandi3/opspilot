@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['payload'])]
 class RequestSubmission extends Model
@@ -40,6 +41,11 @@ class RequestSubmission extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class)->orderBy('position')->orderBy('id');
+    }
+
     protected function casts(): array
     {
         return [
@@ -48,6 +54,7 @@ class RequestSubmission extends Model
             'definition_snapshot' => 'array',
             'submitted_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'resolved_at' => 'datetime',
         ];
     }
 }

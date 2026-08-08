@@ -97,9 +97,20 @@ class RequestSubmissionController extends Controller
         return ['requestType:id,name,slug', 'workflow:id,name,version', 'creator:id,name,email'];
     }
 
+    /** @return list<string> */
+    private function detailRelations(): array
+    {
+        return [
+            ...$this->relations(),
+            'approvals.workflowStep:id,name,approver_type,approver_role',
+            'approvals.assignees.user:id,name',
+            'approvals.decidedBy:id,name',
+        ];
+    }
+
     private function response(Request $request, RequestSubmission $submission, ?string $message = null, int $status = 200): JsonResponse
     {
-        $body = ['data' => RequestSubmissionResource::make($submission->load($this->relations()))->resolve($request)];
+        $body = ['data' => RequestSubmissionResource::make($submission->load($this->detailRelations()))->resolve($request)];
         if ($message !== null) {
             $body['message'] = $message;
         }

@@ -2,7 +2,9 @@
 
 namespace App\Actions;
 
+use App\Enums\RequestApprovalStatus;
 use App\Enums\RequestStatus;
+use App\Models\RequestApproval;
 use App\Models\RequestSubmission;
 use App\Models\RequestType;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,22 @@ class CancelRequest
             $locked = RequestSubmission::query()->lockForUpdate()->findOrFail($submission->id);
             if (! in_array($locked->status, [RequestStatus::Draft, RequestStatus::Submitted], true)) {
                 throw ValidationException::withMessages(['request' => 'This request cannot be cancelled.']);
+            }
+
+            if ($locked->status === RequestStatus::Submitted) {
+                $openApprovals = RequestApproval::query()
+                    ->where('request_submission_id', $locked->id)
+                    ->whereIn('status', [RequestApprovalStatus::Pending, RequestApprovalStatus::Waiting])
+                    ->orderBy('position')
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+                foreach ($openApprovals as $approval) {
+                    $approval->forceFill([
+                        'status' => RequestApprovalStatus::Cancelled,
+                        'pending_guard' => null,
+                    ])->save();
+                }
             }
 
             $locked->forceFill([

@@ -616,7 +616,7 @@ class RequestSubmissionTest extends TestCase
 
     private function activeWorkflow(RequestType $type, User $creator, int $version = 1, string $name = 'Approval'): Workflow
     {
-        return Workflow::factory()->create([
+        $workflow = Workflow::factory()->create([
             'workspace_id' => $type->workspace_id,
             'request_type_id' => $type,
             'created_by' => $creator,
@@ -627,6 +627,9 @@ class RequestSubmissionTest extends TestCase
             'active_guard' => 1,
             'published_at' => now(),
         ]);
+        $this->step($workflow);
+
+        return $workflow;
     }
 
     private function draftWorkflow(RequestType $type, User $creator, int $version = 1, string $name = 'Approval'): Workflow
@@ -646,7 +649,12 @@ class RequestSubmissionTest extends TestCase
 
     private function step(Workflow $workflow): WorkflowStep
     {
-        return WorkflowStep::factory()->create(['workflow_id' => $workflow]);
+        return WorkflowStep::factory()->create([
+            'workflow_id' => $workflow,
+            'approver_type' => 'role',
+            'approver_role' => 'owner',
+            'approver_user_id' => null,
+        ]);
     }
 
     private function field(

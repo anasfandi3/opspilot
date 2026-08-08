@@ -58,4 +58,9 @@ class Workspace extends Model
     {
         return $this->hasMany(RequestSubmission::class);
     }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class);
+    }
 }

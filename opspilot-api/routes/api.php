@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\RequestApprovalController;
 use App\Http\Controllers\Api\V1\RequestCatalogController;
 use App\Http\Controllers\Api\V1\RequestSubmissionController;
 use App\Http\Controllers\Api\V1\RequestTypeController;
@@ -53,6 +54,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::patch('workspaces/{workspace}/requests/{requestSubmission}', [RequestSubmissionController::class, 'update'])->name('workspaces.requests.update');
                 Route::post('workspaces/{workspace}/requests/{requestSubmission}/submit', [RequestSubmissionController::class, 'submit'])->name('workspaces.requests.submit');
                 Route::post('workspaces/{workspace}/requests/{requestSubmission}/cancel', [RequestSubmissionController::class, 'cancel'])->name('workspaces.requests.cancel');
+                Route::get('workspaces/{workspace}/approvals', [RequestApprovalController::class, 'index'])->name('workspaces.approvals.index');
+                Route::get('workspaces/{workspace}/approvals/{approval}', [RequestApprovalController::class, 'show'])->name('workspaces.approvals.show');
+                Route::post('workspaces/{workspace}/approvals/{approval}/approve', [RequestApprovalController::class, 'approve'])->name('workspaces.approvals.approve');
+                Route::post('workspaces/{workspace}/approvals/{approval}/reject', [RequestApprovalController::class, 'reject'])->name('workspaces.approvals.reject');
                 Route::post('workspaces/{workspace}/request-types/{requestType}/fields', [RequestTypeFieldController::class, 'store'])->name('workspaces.request_types.fields.store');
                 Route::post('workspaces/{workspace}/request-types/{requestType}/fields/reorder', [RequestTypeFieldController::class, 'reorder'])->name('workspaces.request_types.fields.reorder');
                 Route::patch('workspaces/{workspace}/request-types/{requestType}/fields/{field}', [RequestTypeFieldController::class, 'update'])->name('workspaces.request_types.fields.update');

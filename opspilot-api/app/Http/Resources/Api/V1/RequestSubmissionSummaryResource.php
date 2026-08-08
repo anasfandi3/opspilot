@@ -30,6 +30,7 @@ class RequestSubmissionSummaryResource extends JsonResource
             ]),
             'submitted_at' => $this->submitted_at,
             'cancelled_at' => $this->cancelled_at,
+            'resolved_at' => $this->resolved_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

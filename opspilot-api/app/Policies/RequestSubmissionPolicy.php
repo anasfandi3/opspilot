@@ -37,7 +37,12 @@ class RequestSubmissionPolicy
         return $submission->workspace->membershipFor($user) !== null
             && ($this->viewAll($user, $submission->workspace)
                 || ($submission->created_by === $user->id
-                    && $this->permissions->allows($user, $submission->workspace, WorkspacePermission::RequestsViewOwn)));
+                    && $this->permissions->allows($user, $submission->workspace, WorkspacePermission::RequestsViewOwn))
+                || ($this->permissions->allows($user, $submission->workspace, WorkspacePermission::ApprovalsViewAssigned)
+                    && $submission->approvals()->whereHas(
+                        'assignees',
+                        fn ($query) => $query->whereBelongsTo($user),
+                    )->exists()));
     }
 
     public function update(User $user, RequestSubmission $submission): bool

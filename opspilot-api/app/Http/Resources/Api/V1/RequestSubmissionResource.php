@@ -11,6 +11,7 @@ class RequestSubmissionResource extends RequestSubmissionSummaryResource
         return [
             ...parent::toArray($request),
             'definition_snapshot' => $this->definition_snapshot,
+            'approvals' => RequestApprovalResource::collection($this->whenLoaded('approvals')),
         ];
     }
 }

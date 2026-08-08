@@ -35,6 +35,11 @@ class WorkflowStep extends Model
         return $this->hasMany(WorkflowStepCondition::class)->orderBy('position')->orderBy('id');
     }
 
+    public function runtimeApprovals(): HasMany
+    {
+        return $this->hasMany(RequestApproval::class);
+    }
+
     protected function casts(): array
     {
         return [
