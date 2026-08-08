@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +17,7 @@ class RequestTypeFactory extends Factory
             'slug' => str($name)->slug().'-'.fake()->unique()->randomNumber(5),
             'description' => fake()->optional()->sentence(),
             'is_active' => true,
-            'created_by' => User::factory(),
+            'created_by' => fn (array $attributes): int => Workspace::query()->findOrFail($attributes['workspace_id'])->owner_id,
         ];
     }
 }

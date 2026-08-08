@@ -13,7 +13,13 @@ class WorkflowStepConditionFactory extends Factory
     {
         return [
             'workflow_step_id' => WorkflowStep::factory(),
-            'request_type_field_id' => RequestTypeField::factory(),
+            'request_type_field_id' => function (array $attributes): int {
+                $step = WorkflowStep::query()->findOrFail($attributes['workflow_step_id']);
+
+                return RequestTypeField::factory()->create([
+                    'request_type_id' => $step->workflow()->valueOrFail('request_type_id'),
+                ])->id;
+            },
             'operator' => WorkflowConditionOperator::Equals,
             'value' => 'value',
             'position' => 1,

@@ -9,6 +9,7 @@ use App\Http\Requests\Api\V1\StoreWorkspaceRequest;
 use App\Http\Requests\Api\V1\UpdateWorkspaceRequest;
 use App\Http\Resources\Api\V1\WorkspaceResource;
 use App\Models\Workspace;
+use App\Support\WorkspaceRoleLookup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -16,13 +17,18 @@ use Illuminate\Support\Facades\Gate;
 
 class WorkspaceController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, WorkspaceRoleLookup $roles): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', Workspace::class);
 
         $workspaces = $request->user()->workspaces()
             ->latest('workspaces.created_at')
             ->get();
+        $workspaceRoles = $roles->forUser($request->user(), $workspaces);
+        $workspaces->each(fn (Workspace $workspace) => $workspace->setAttribute(
+            'current_user_role',
+            $workspaceRoles->get($workspace->id),
+        ));
 
         return WorkspaceResource::collection($workspaces);
     }

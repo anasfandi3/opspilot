@@ -1,58 +1,147 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# OpsPilot API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+OpsPilot is a multi-tenant internal operations and approval management API built with Laravel.
 
-## About Laravel
+## Key capabilities
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Workspace multi-tenancy and workspace-scoped RBAC
+- Configurable request types and dynamic form fields
+- Immutable, versioned conditional approval workflows
+- Draft, submission, approval, rejection, and cancellation lifecycle
+- Comments, private attachments, and an activity timeline
+- Queued database and email notifications
+- Operational dashboard and read-only reporting
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Technology
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.4+
+- Laravel 13 and Laravel Sanctum
+- MySQL 8
+- Spatie Laravel Permission with teams enabled
+- Database-backed queues
+- PHPUnit 12
 
-## Learning Laravel
+## Architecture overview
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+API requests generally pass through versioned routes, authentication and workspace-context middleware, a Form Request, and a policy before reaching a controller. Controllers delegate multi-record business operations to focused actions or query services. Eloquent persists the result and API Resources produce the response.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```text
+Route -> middleware/context -> Form Request -> Policy
+      -> Controller -> Action/query service -> Eloquent/DB -> Resource
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+A workflow definition is immutable after publication. Submitting a request snapshots the active definition into runtime approval records, so later workflow versions cannot rewrite history. Workspace membership establishes tenancy, while a separately assigned, workspace-scoped Spatie role grants capabilities. Membership by itself is not authorization.
 
-## Contributing
+## Local setup
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-## Code of Conduct
+Configure the `DB_*` values for a MySQL database, then run:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate
+php artisan permissions:sync
+php artisan serve
+```
 
-## Security Vulnerabilities
+Workflow notifications use the configured queue. Run a worker alongside the API:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan queue:work
+```
 
-## License
+Configure a real mail transport for email delivery. The database notification channel remains available through the notification API.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Private attachments
+
+The defaults are:
+
+```dotenv
+REQUEST_ATTACHMENT_DISK=local
+REQUEST_ATTACHMENT_MAX_KB=10240
+```
+
+`REQUEST_ATTACHMENT_DISK` **must reference a private filesystem disk**. Attachment URLs are never exposed; authorized downloads stream through the API. Do not point this setting at a public disk.
+
+## Demo data
+
+On a development environment, seed the deterministic Acme Operations scenario explicitly:
+
+```bash
+php artisan db:seed --class=DemoSeeder
+```
+
+All demo accounts use the development-only password `password`:
+
+| Account | Workspace role |
+| --- | --- |
+| `owner@opspilot.test` | owner |
+| `admin@opspilot.test` | admin |
+| `approver@opspilot.test` | approver |
+| `requester@opspilot.test` | requester |
+| `auditor@opspilot.test` | auditor |
+
+The seed contains Purchase, Leave, and Equipment/Access request types; published workflows with conditional steps; draft, pending, approved, rejected, and cancelled requests; completed and pending approvals; comments; activity; and reporting data. Notifications are suppressed while seeding. The seeder refuses to run in production and safely skips an existing demo workspace.
+
+## Tests and formatting
+
+The automated suite uses an isolated SQLite in-memory database by default.
+
+```bash
+php artisan test --compact
+vendor/bin/pint --test
+```
+
+## API overview
+
+All routes are under `/api/v1`. Auth registration and login are public; the remaining endpoints require a Sanctum bearer token.
+
+| Area | Important routes |
+| --- | --- |
+| Auth | `POST auth/register`, `POST auth/login`, `POST auth/logout`, `GET/PATCH me`, `PUT me/password` |
+| Workspaces | `GET/POST workspaces`, `GET/PATCH workspaces/{workspace}`, member and current-workspace routes |
+| Invitations and roles | workspace invitations, invitation acceptance, member role update/removal |
+| Request types | request-type CRUD, field CRUD/reorder, and request catalog |
+| Workflow definitions | workflow draft/create/clone/publish/delete; step CRUD/reorder |
+| Requests | request CRUD, submit/cancel, request detail and listing |
+| Approvals | approval inbox/detail and approve/reject actions |
+| Collaboration | nested comments, attachments/downloads, and activity timeline |
+| Notifications | inbox, unread count, mark read, and mark all read |
+| Operations | workspace dashboard, request report, and approval report |
+
+Use `php artisan route:list --path=api/v1` for the authoritative route catalog and middleware assignments.
+
+## Domain flow
+
+```text
+Workspace
+  -> Request Type
+  -> Workflow Version
+  -> Request Draft
+  -> Submit
+  -> Runtime Approval Plan
+  -> Sequential Decisions
+  -> Approved / Rejected
+```
+
+Conditional steps that do not match the submitted field snapshot are recorded as skipped. Approval assignment is resolved at submission time; deciding an approval still requires current workspace membership and permission.
+
+## Security and tenancy
+
+- Nested scoped bindings and explicit workspace predicates isolate tenant data.
+- Spatie's team ID is set per request and restored in a `finally` block for long-running-worker safety.
+- Policies require workspace-scoped permissions; auditors remain read-only and requesters cannot access workspace-wide reports.
+- Published workflow versions and runtime approval history are protected from mutation.
+- Attachment disk/path values are server-controlled and omitted from API resources.
+- Notification operations are registered after the business commit, reload models by stable IDs, and isolate queue failures from committed state.
+
+## Intentional limitations
+
+- Approval execution is sequential; delegation and reassignment are not supported.
+- There is no workspace deletion workflow, frontend, realtime push, reminder/escalation system, report export, or custom workflow scripting.
+- Direct workspace deletion is unsupported because historical records intentionally use restrictive foreign keys.
+- Reports are read-only direct database aggregates and are not cached.

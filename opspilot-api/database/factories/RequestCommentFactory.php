@@ -4,8 +4,6 @@ namespace Database\Factories;
 
 use App\Models\RequestComment;
 use App\Models\RequestSubmission;
-use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,9 +19,9 @@ class RequestCommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'workspace_id' => Workspace::factory(),
             'request_submission_id' => RequestSubmission::factory(),
-            'author_id' => User::factory(),
+            'workspace_id' => fn (array $attributes): int => RequestSubmission::query()->findOrFail($attributes['request_submission_id'])->workspace_id,
+            'author_id' => fn (array $attributes): int => RequestSubmission::query()->findOrFail($attributes['request_submission_id'])->created_by,
             'body' => fake()->sentence(),
         ];
     }

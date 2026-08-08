@@ -3,10 +3,10 @@
 namespace Database\Factories;
 
 use App\Enums\RequestApprovalStatus;
+use App\Enums\WorkspaceRole;
 use App\Models\RequestApproval;
 use App\Models\RequestSubmission;
 use App\Models\WorkflowStep;
-use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,17 +14,20 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class RequestApprovalFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
-            'workspace_id' => Workspace::factory(),
-            'request_submission_id' => RequestSubmission::factory(),
-            'workflow_step_id' => WorkflowStep::factory(),
+            'request_submission_id' => RequestSubmission::factory()->submitted(),
+            'workspace_id' => fn (array $attributes): int => RequestSubmission::query()->findOrFail($attributes['request_submission_id'])->workspace_id,
+            'workflow_step_id' => function (array $attributes): int {
+                $submission = RequestSubmission::query()->findOrFail($attributes['request_submission_id']);
+
+                return WorkflowStep::factory()->create([
+                    'workflow_id' => $submission->workflow_id,
+                    'approver_role' => WorkspaceRole::Owner,
+                ])->id;
+            },
             'position' => 1,
             'status' => RequestApprovalStatus::Waiting,
             'pending_guard' => null,
@@ -32,5 +35,14 @@ class RequestApprovalFactory extends Factory
             'decided_at' => null,
             'decided_by' => null,
         ];
+    }
+
+    public function pending(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => RequestApprovalStatus::Pending,
+            'pending_guard' => 1,
+            'activated_at' => now(),
+        ]);
     }
 }

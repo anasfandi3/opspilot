@@ -32,23 +32,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\UsesDisposableSqliteDatabase;
 use Tests\TestCase;
 
 class RequestNotificationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->artisan('migrate:fresh', ['--force' => true])->assertExitCode(0);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->artisan('migrate:fresh', ['--force' => true]);
-
-        parent::tearDown();
-    }
+    use UsesDisposableSqliteDatabase;
 
     public function test_initial_role_approval_notifies_each_current_assignee_once_with_stable_safe_payload(): void
     {

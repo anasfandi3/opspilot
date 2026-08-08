@@ -15,14 +15,16 @@ class WorkspaceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $role = app(WorkspacePermissions::class)->role($request->user(), $this->resource);
+        $role = $this->current_user_role === null
+            ? app(WorkspacePermissions::class)->role($request->user(), $this->resource)?->value
+            : (string) $this->current_user_role;
 
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
             'owner_id' => $this->owner_id,
-            'role' => $role?->value,
+            'role' => $role,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

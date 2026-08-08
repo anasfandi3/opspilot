@@ -6,6 +6,7 @@ use App\Models\Workflow;
 use App\Models\WorkflowStep;
 use App\Models\WorkflowStepCondition;
 use App\Support\WorkflowDefinitionValidator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,7 +21,7 @@ class SaveWorkflowStep
             $lockedWorkflow = $this->lockedDraft($workflow);
             $stepData = $this->normalizeApprover($data);
             $this->validator->validateStepData($lockedWorkflow, $stepData);
-            $step = new WorkflowStep($stepData);
+            $step = new WorkflowStep(Arr::except($stepData, ['conditions']));
             $step->forceFill(['position' => ((int) $lockedWorkflow->steps()->max('position')) + 1]);
             $step->workflow()->associate($lockedWorkflow);
             $step->save();

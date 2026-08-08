@@ -29,24 +29,13 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use RuntimeException;
+use Tests\Concerns\UsesDisposableSqliteDatabase;
 use Tests\TestCase;
 use Throwable;
 
 class NotificationFailureIsolationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->artisan('migrate:fresh', ['--force' => true])->assertExitCode(0);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->artisan('migrate:fresh', ['--force' => true]);
-
-        parent::tearDown();
-    }
+    use UsesDisposableSqliteDatabase;
 
     public function test_attachment_notification_failure_after_commit_preserves_the_business_result_and_file(): void
     {

@@ -5,8 +5,6 @@ namespace Database\Factories;
 use App\Enums\RequestActivityType;
 use App\Models\RequestActivity;
 use App\Models\RequestSubmission;
-use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,9 +20,9 @@ class RequestActivityFactory extends Factory
     public function definition(): array
     {
         return [
-            'workspace_id' => Workspace::factory(),
             'request_submission_id' => RequestSubmission::factory(),
-            'actor_id' => User::factory(),
+            'workspace_id' => fn (array $attributes): int => RequestSubmission::query()->findOrFail($attributes['request_submission_id'])->workspace_id,
+            'actor_id' => fn (array $attributes): int => RequestSubmission::query()->findOrFail($attributes['request_submission_id'])->created_by,
             'type' => RequestActivityType::RequestCreated,
             'request_comment_id' => null,
             'request_attachment_id' => null,
