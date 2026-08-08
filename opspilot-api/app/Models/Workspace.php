@@ -53,4 +53,9 @@ class Workspace extends Model
     {
         return $this->hasMany(Workflow::class);
     }
+
+    public function requestSubmissions(): HasMany
+    {
+        return $this->hasMany(RequestSubmission::class);
+    }
 }

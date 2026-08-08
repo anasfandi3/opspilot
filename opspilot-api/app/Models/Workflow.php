@@ -36,6 +36,11 @@ class Workflow extends Model
         return $this->hasMany(WorkflowStep::class)->orderBy('position')->orderBy('id');
     }
 
+    public function requestSubmissions(): HasMany
+    {
+        return $this->hasMany(RequestSubmission::class);
+    }
+
     public function isDraft(): bool
     {
         return $this->status === WorkflowStatus::Draft;

@@ -45,6 +45,11 @@ class User extends Authenticatable
         return $this->hasMany(WorkspaceMembership::class);
     }
 
+    public function createdRequestSubmissions(): HasMany
+    {
+        return $this->hasMany(RequestSubmission::class, 'created_by');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

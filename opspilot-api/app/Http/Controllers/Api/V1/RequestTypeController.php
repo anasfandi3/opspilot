@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\CreateRequestType;
 use App\Actions\DeleteRequestType;
+use App\Actions\UpdateRequestType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreRequestTypeRequest;
 use App\Http\Requests\Api\V1\UpdateRequestTypeRequest;
@@ -45,12 +46,12 @@ class RequestTypeController extends Controller
         ]);
     }
 
-    public function update(UpdateRequestTypeRequest $request, Workspace $workspace, RequestType $requestType): JsonResponse
+    public function update(UpdateRequestTypeRequest $request, Workspace $workspace, RequestType $requestType, UpdateRequestType $action): JsonResponse
     {
-        $requestType->update($request->validated());
+        $requestType = $action->handle($requestType, $request->validated());
 
         return response()->json([
-            'data' => RequestTypeResource::make($requestType->refresh()->load(['creator:id,name', 'fields']))->resolve($request),
+            'data' => RequestTypeResource::make($requestType->load(['creator:id,name', 'fields']))->resolve($request),
             'message' => 'Request type updated successfully.',
         ]);
     }

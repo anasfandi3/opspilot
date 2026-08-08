@@ -44,6 +44,11 @@ class RequestType extends Model
         return $this->hasOne(Workflow::class)->where('status', WorkflowStatus::Active);
     }
 
+    public function requestSubmissions(): HasMany
+    {
+        return $this->hasMany(RequestSubmission::class);
+    }
+
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];

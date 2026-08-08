@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\RequestCatalogController;
+use App\Http\Controllers\Api\V1\RequestSubmissionController;
 use App\Http\Controllers\Api\V1\RequestTypeController;
 use App\Http\Controllers\Api\V1\RequestTypeFieldController;
 use App\Http\Controllers\Api\V1\WorkflowController;
@@ -40,10 +42,17 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::delete('workspaces/{workspace}/invitations/{invitation}', [WorkspaceInvitationController::class, 'destroy'])->name('workspaces.invitations.destroy');
                 Route::post('workspaces/{workspace}/invitations/{invitation}/resend', [WorkspaceInvitationController::class, 'resend'])->name('workspaces.invitations.resend');
                 Route::get('workspaces/{workspace}/request-types', [RequestTypeController::class, 'index'])->name('workspaces.request_types.index');
+                Route::get('workspaces/{workspace}/request-catalog', [RequestCatalogController::class, 'index'])->name('workspaces.request_catalog.index');
                 Route::post('workspaces/{workspace}/request-types', [RequestTypeController::class, 'store'])->name('workspaces.request_types.store');
                 Route::get('workspaces/{workspace}/request-types/{requestType}', [RequestTypeController::class, 'show'])->name('workspaces.request_types.show');
                 Route::patch('workspaces/{workspace}/request-types/{requestType}', [RequestTypeController::class, 'update'])->name('workspaces.request_types.update');
                 Route::delete('workspaces/{workspace}/request-types/{requestType}', [RequestTypeController::class, 'destroy'])->name('workspaces.request_types.destroy');
+                Route::post('workspaces/{workspace}/request-types/{requestType}/requests', [RequestSubmissionController::class, 'store'])->name('workspaces.request_types.requests.store');
+                Route::get('workspaces/{workspace}/requests', [RequestSubmissionController::class, 'index'])->name('workspaces.requests.index');
+                Route::get('workspaces/{workspace}/requests/{requestSubmission}', [RequestSubmissionController::class, 'show'])->name('workspaces.requests.show');
+                Route::patch('workspaces/{workspace}/requests/{requestSubmission}', [RequestSubmissionController::class, 'update'])->name('workspaces.requests.update');
+                Route::post('workspaces/{workspace}/requests/{requestSubmission}/submit', [RequestSubmissionController::class, 'submit'])->name('workspaces.requests.submit');
+                Route::post('workspaces/{workspace}/requests/{requestSubmission}/cancel', [RequestSubmissionController::class, 'cancel'])->name('workspaces.requests.cancel');
                 Route::post('workspaces/{workspace}/request-types/{requestType}/fields', [RequestTypeFieldController::class, 'store'])->name('workspaces.request_types.fields.store');
                 Route::post('workspaces/{workspace}/request-types/{requestType}/fields/reorder', [RequestTypeFieldController::class, 'reorder'])->name('workspaces.request_types.fields.reorder');
                 Route::patch('workspaces/{workspace}/request-types/{requestType}/fields/{field}', [RequestTypeFieldController::class, 'update'])->name('workspaces.request_types.fields.update');
