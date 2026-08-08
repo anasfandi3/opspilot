@@ -5,10 +5,13 @@ namespace App\Actions;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMembership;
+use App\Support\WorkspacePermissions;
 use Illuminate\Support\Facades\DB;
 
 class RemoveWorkspaceMember
 {
+    public function __construct(private WorkspacePermissions $permissions) {}
+
     public function handle(Workspace $workspace, User $user): void
     {
         DB::transaction(function () use ($workspace, $user): void {
@@ -19,6 +22,8 @@ class RemoveWorkspaceMember
                 ->whereBelongsTo($lockedUser)
                 ->firstOrFail()
                 ->delete();
+
+            $this->permissions->remove($lockedUser, $workspace);
 
             if ($lockedUser->current_workspace_id !== $workspace->id) {
                 return;

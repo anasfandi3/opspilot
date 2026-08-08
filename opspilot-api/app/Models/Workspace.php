@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\WorkspaceRole;
 use Database\Factories\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,7 +25,7 @@ class Workspace extends Model
     {
         return $this->belongsToMany(User::class, 'workspace_user')
             ->using(WorkspaceMembership::class)
-            ->withPivot(['id', 'role', 'joined_at'])
+            ->withPivot(['id', 'joined_at'])
             ->withTimestamps();
     }
 
@@ -40,8 +39,8 @@ class Workspace extends Model
         return $this->memberships()->whereBelongsTo($user)->first();
     }
 
-    public function roleFor(User $user): ?WorkspaceRole
+    public function invitations(): HasMany
     {
-        return $this->membershipFor($user)?->role;
+        return $this->hasMany(WorkspaceInvitation::class);
     }
 }

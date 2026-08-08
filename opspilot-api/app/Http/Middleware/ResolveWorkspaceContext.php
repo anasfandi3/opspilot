@@ -19,14 +19,20 @@ class ResolveWorkspaceContext
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $previousTeamId = getPermissionsTeamId();
         $user = $request->user();
         $workspace = $user?->current_workspace_id
             ? $user->workspaces()->whereKey($user->current_workspace_id)->first()
             : null;
 
         $this->workspaceContext->set($workspace);
+        setPermissionsTeamId($workspace?->id);
         Context::add('workspace_id', $workspace?->id);
 
-        return $next($request);
+        try {
+            return $next($request);
+        } finally {
+            setPermissionsTeamId($previousTeamId);
+        }
     }
 }

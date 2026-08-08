@@ -6,6 +6,7 @@ use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMembership;
+use App\Support\WorkspacePermissions;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -13,6 +14,11 @@ use Illuminate\Support\Str;
 class CreateWorkspace
 {
     private const int MAX_SLUG_INSERT_ATTEMPTS = 5;
+
+    public function __construct(
+        private SynchronizeWorkspacePermissions $synchronizePermissions,
+        private WorkspacePermissions $permissions,
+    ) {}
 
     public function handle(User $user, string $name): Workspace
     {
@@ -23,9 +29,11 @@ class CreateWorkspace
             WorkspaceMembership::query()->create([
                 'workspace_id' => $workspace->id,
                 'user_id' => $lockedUser->id,
-                'role' => WorkspaceRole::Owner,
                 'joined_at' => now(),
             ]);
+
+            $this->synchronizePermissions->handle($workspace);
+            $this->permissions->assign($lockedUser, $workspace, WorkspaceRole::Owner);
 
             $lockedUser->forceFill(['current_workspace_id' => $workspace->id])->save();
 

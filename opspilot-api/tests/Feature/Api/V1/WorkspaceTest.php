@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Actions\SynchronizeWorkspacePermissions;
 use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMembership;
+use App\Support\WorkspacePermissions;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
@@ -33,7 +35,7 @@ class WorkspaceTest extends TestCase
         $membership = WorkspaceMembership::query()->sole();
         $this->assertSame($workspace->id, $membership->workspace_id);
         $this->assertSame($user->id, $membership->user_id);
-        $this->assertSame(WorkspaceRole::Owner, $membership->role);
+        $this->assertSame(WorkspaceRole::Owner, app(WorkspacePermissions::class)->role($user, $workspace));
         $this->assertSame($workspace->id, $user->fresh()->current_workspace_id);
     }
 
@@ -115,7 +117,7 @@ class WorkspaceTest extends TestCase
         $first = $this->workspaceOwnedBy($user, 'First');
         $second = $this->workspaceOwnedBy($owner, 'Second');
         $unrelated = $this->workspaceOwnedBy($owner, 'Unrelated');
-        $this->addMember($second, $user, WorkspaceRole::Member);
+        $this->addMember($second, $user, WorkspaceRole::Requester);
         $this->authenticate($user);
 
         $response = $this->getJson('/api/v1/workspaces')->assertOk()->assertJsonCount(2, 'data');
@@ -132,13 +134,13 @@ class WorkspaceTest extends TestCase
         $owner = User::factory()->create();
         $member = User::factory()->create();
         $workspace = $this->workspaceOwnedBy($owner);
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($member);
 
         $this->getJson("/api/v1/workspaces/{$workspace->id}")
             ->assertOk()
             ->assertJsonPath('data.id', $workspace->id)
-            ->assertJsonPath('data.role', WorkspaceRole::Member->value);
+            ->assertJsonPath('data.role', WorkspaceRole::Requester->value);
     }
 
     public function test_unrelated_user_cannot_view_workspace(): void
@@ -178,7 +180,7 @@ class WorkspaceTest extends TestCase
     {
         $workspace = $this->workspaceOwnedBy(User::factory()->create());
         $member = User::factory()->create();
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($member);
 
         $this->patchJson("/api/v1/workspaces/{$workspace->id}", ['name' => 'Forbidden Rename'])
@@ -190,7 +192,7 @@ class WorkspaceTest extends TestCase
         $user = User::factory()->create();
         $first = $this->workspaceOwnedBy($user, 'First');
         $second = $this->workspaceOwnedBy(User::factory()->create(), 'Second');
-        $this->addMember($second, $user, WorkspaceRole::Member);
+        $this->addMember($second, $user, WorkspaceRole::Requester);
         $user->forceFill(['current_workspace_id' => $first->id])->save();
         $this->authenticate($user);
 
@@ -230,13 +232,14 @@ class WorkspaceTest extends TestCase
 
         $this->postJson("/api/v1/workspaces/{$workspace->id}/leave")->assertOk();
         $this->assertDatabaseMissing('workspace_user', ['workspace_id' => $workspace->id, 'user_id' => $admin->id]);
+        $this->assertNull(app(WorkspacePermissions::class)->role($admin, $workspace));
     }
 
     public function test_member_can_leave_workspace(): void
     {
         $workspace = $this->workspaceOwnedBy(User::factory()->create());
         $member = User::factory()->create();
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($member);
 
         $this->postJson("/api/v1/workspaces/{$workspace->id}/leave")->assertOk();
@@ -248,8 +251,8 @@ class WorkspaceTest extends TestCase
         $user = User::factory()->create();
         $leaving = $this->workspaceOwnedBy(User::factory()->create(), 'Leaving');
         $remaining = $this->workspaceOwnedBy(User::factory()->create(), 'Remaining');
-        $this->addMember($leaving, $user, WorkspaceRole::Member);
-        $this->addMember($remaining, $user, WorkspaceRole::Member);
+        $this->addMember($leaving, $user, WorkspaceRole::Requester);
+        $this->addMember($remaining, $user, WorkspaceRole::Requester);
         $user->forceFill(['current_workspace_id' => $leaving->id])->save();
         $this->authenticate($user);
 
@@ -264,9 +267,9 @@ class WorkspaceTest extends TestCase
         $leaving = $this->workspaceOwnedBy(User::factory()->create(), 'Leaving');
         $firstFallback = $this->workspaceOwnedBy(User::factory()->create(), 'First Fallback');
         $secondFallback = $this->workspaceOwnedBy(User::factory()->create(), 'Second Fallback');
-        $this->addMember($leaving, $user, WorkspaceRole::Member);
-        $firstMembership = $this->addMember($firstFallback, $user, WorkspaceRole::Member);
-        $secondMembership = $this->addMember($secondFallback, $user, WorkspaceRole::Member);
+        $this->addMember($leaving, $user, WorkspaceRole::Requester);
+        $firstMembership = $this->addMember($firstFallback, $user, WorkspaceRole::Requester);
+        $secondMembership = $this->addMember($secondFallback, $user, WorkspaceRole::Requester);
         $joinedAt = now()->subDay();
         $firstMembership->update(['joined_at' => $joinedAt]);
         $secondMembership->update(['joined_at' => $joinedAt]);
@@ -283,7 +286,7 @@ class WorkspaceTest extends TestCase
     {
         $workspace = $this->workspaceOwnedBy(User::factory()->create());
         $member = User::factory()->create();
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $member->forceFill(['current_workspace_id' => $workspace->id])->save();
         $this->authenticate($member);
 
@@ -297,14 +300,14 @@ class WorkspaceTest extends TestCase
         $owner = User::factory()->create(['name' => 'Owner']);
         $member = User::factory()->create(['name' => 'Member']);
         $workspace = $this->workspaceOwnedBy($owner);
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($member);
 
         $this->getJson("/api/v1/workspaces/{$workspace->id}/members")
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonFragment(['id' => $owner->id, 'role' => WorkspaceRole::Owner->value])
-            ->assertJsonFragment(['id' => $member->id, 'role' => WorkspaceRole::Member->value]);
+            ->assertJsonFragment(['id' => $member->id, 'role' => WorkspaceRole::Requester->value]);
     }
 
     public function test_unrelated_user_cannot_list_workspace_members(): void
@@ -320,11 +323,12 @@ class WorkspaceTest extends TestCase
         $owner = User::factory()->create();
         $member = User::factory()->create();
         $workspace = $this->workspaceOwnedBy($owner);
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($owner);
 
         $this->deleteJson("/api/v1/workspaces/{$workspace->id}/members/{$member->id}")->assertOk();
         $this->assertDatabaseMissing('workspace_user', ['workspace_id' => $workspace->id, 'user_id' => $member->id]);
+        $this->assertNull(app(WorkspacePermissions::class)->role($member, $workspace));
     }
 
     public function test_admin_can_remove_members_and_other_admins(): void
@@ -335,7 +339,7 @@ class WorkspaceTest extends TestCase
         $member = User::factory()->create();
         $this->addMember($workspace, $admin, WorkspaceRole::Admin);
         $this->addMember($workspace, $otherAdmin, WorkspaceRole::Admin);
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
         $this->authenticate($admin);
 
         $this->deleteJson("/api/v1/workspaces/{$workspace->id}/members/{$otherAdmin->id}")->assertOk();
@@ -351,8 +355,8 @@ class WorkspaceTest extends TestCase
         $workspace = $this->workspaceOwnedBy(User::factory()->create());
         $actor = User::factory()->create();
         $target = User::factory()->create();
-        $this->addMember($workspace, $actor, WorkspaceRole::Member);
-        $this->addMember($workspace, $target, WorkspaceRole::Member);
+        $this->addMember($workspace, $actor, WorkspaceRole::Requester);
+        $this->addMember($workspace, $target, WorkspaceRole::Requester);
         $this->authenticate($actor);
 
         $this->deleteJson("/api/v1/workspaces/{$workspace->id}/members/{$target->id}")->assertForbidden();
@@ -396,8 +400,8 @@ class WorkspaceTest extends TestCase
         $removed = User::factory()->create();
         $removingFrom = $this->workspaceOwnedBy($owner, 'Removing From');
         $remaining = $this->workspaceOwnedBy(User::factory()->create(), 'Remaining');
-        $this->addMember($removingFrom, $removed, WorkspaceRole::Member);
-        $this->addMember($remaining, $removed, WorkspaceRole::Member);
+        $this->addMember($removingFrom, $removed, WorkspaceRole::Requester);
+        $this->addMember($remaining, $removed, WorkspaceRole::Requester);
         $removed->forceFill(['current_workspace_id' => $removingFrom->id])->save();
         $this->authenticate($owner);
 
@@ -411,7 +415,7 @@ class WorkspaceTest extends TestCase
         $owner = User::factory()->create();
         $removed = User::factory()->create();
         $workspace = $this->workspaceOwnedBy($owner);
-        $this->addMember($workspace, $removed, WorkspaceRole::Member);
+        $this->addMember($workspace, $removed, WorkspaceRole::Requester);
         $removed->forceFill(['current_workspace_id' => $workspace->id])->save();
         $this->authenticate($owner);
 
@@ -434,7 +438,7 @@ class WorkspaceTest extends TestCase
         $owner = User::factory()->create();
         $member = User::factory()->create();
         $workspace = $this->workspaceOwnedBy($owner);
-        $this->addMember($workspace, $member, WorkspaceRole::Member);
+        $this->addMember($workspace, $member, WorkspaceRole::Requester);
 
         $responses = [
             $this->getJson('/api/v1/workspaces'),
@@ -472,11 +476,14 @@ class WorkspaceTest extends TestCase
 
     private function addMember(Workspace $workspace, User $user, WorkspaceRole $role): WorkspaceMembership
     {
-        return WorkspaceMembership::query()->create([
+        app(SynchronizeWorkspacePermissions::class)->handle($workspace);
+        $membership = WorkspaceMembership::query()->create([
             'workspace_id' => $workspace->id,
             'user_id' => $user->id,
-            'role' => $role,
             'joined_at' => now(),
         ]);
+        app(WorkspacePermissions::class)->assign($user, $workspace, $role);
+
+        return $membership;
     }
 }

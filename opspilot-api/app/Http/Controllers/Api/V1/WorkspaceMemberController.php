@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\RemoveWorkspaceMember;
+use App\Actions\UpdateWorkspaceMemberRole;
+use App\Enums\WorkspaceRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\UpdateWorkspaceMemberRoleRequest;
 use App\Http\Resources\Api\V1\WorkspaceMemberResource;
 use App\Models\User;
 use App\Models\Workspace;
@@ -38,6 +41,16 @@ class WorkspaceMemberController extends Controller
         return response()->json([
             'data' => (object) [],
             'message' => 'Workspace member removed successfully.',
+        ]);
+    }
+
+    public function updateRole(UpdateWorkspaceMemberRoleRequest $request, Workspace $workspace, User $user, UpdateWorkspaceMemberRole $action): JsonResponse
+    {
+        $action->handle($workspace, $request->user(), $user, WorkspaceRole::from($request->validated('role')));
+
+        return response()->json([
+            'data' => WorkspaceMemberResource::make($user->setRelation('pivot', $workspace->membershipFor($user)))->resolve($request),
+            'message' => 'Workspace member role updated successfully.',
         ]);
     }
 }
