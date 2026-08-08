@@ -43,4 +43,9 @@ class Workspace extends Model
     {
         return $this->hasMany(WorkspaceInvitation::class);
     }
+
+    public function requestTypes(): HasMany
+    {
+        return $this->hasMany(RequestType::class);
+    }
 }
