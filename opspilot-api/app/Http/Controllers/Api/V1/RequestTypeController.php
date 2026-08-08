@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\CreateRequestType;
+use App\Actions\DeleteRequestType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreRequestTypeRequest;
 use App\Http\Requests\Api\V1\UpdateRequestTypeRequest;
@@ -54,10 +55,10 @@ class RequestTypeController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, Workspace $workspace, RequestType $requestType): JsonResponse
+    public function destroy(Request $request, Workspace $workspace, RequestType $requestType, DeleteRequestType $action): JsonResponse
     {
         Gate::authorize('manageRequestTypes', $workspace);
-        $requestType->delete();
+        $action->handle($requestType);
 
         return response()->json(['data' => (object) [], 'message' => 'Request type deleted successfully.']);
     }

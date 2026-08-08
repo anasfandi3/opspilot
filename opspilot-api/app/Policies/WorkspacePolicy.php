@@ -79,6 +79,18 @@ class WorkspacePolicy
             && $this->permissions->allows($user, $workspace, WorkspacePermission::RequestTypesManage);
     }
 
+    public function viewWorkflows(User $user, Workspace $workspace): bool
+    {
+        return $workspace->membershipFor($user) !== null
+            && $this->permissions->allows($user, $workspace, WorkspacePermission::WorkflowsView);
+    }
+
+    public function manageWorkflows(User $user, Workspace $workspace): bool
+    {
+        return $workspace->membershipFor($user) !== null
+            && $this->permissions->allows($user, $workspace, WorkspacePermission::WorkflowsManage);
+    }
+
     public function removeMember(User $user, Workspace $workspace, User $member): bool
     {
         return $this->permissions->allows($user, $workspace, WorkspacePermission::MembersManage)

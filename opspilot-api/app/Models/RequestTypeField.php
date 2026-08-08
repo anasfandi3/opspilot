@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['label', 'description', 'is_required', 'config'])]
 class RequestTypeField extends Model
@@ -20,6 +21,11 @@ class RequestTypeField extends Model
     public function requestType(): BelongsTo
     {
         return $this->belongsTo(RequestType::class);
+    }
+
+    public function workflowConditions(): HasMany
+    {
+        return $this->hasMany(WorkflowStepCondition::class);
     }
 
     protected function casts(): array

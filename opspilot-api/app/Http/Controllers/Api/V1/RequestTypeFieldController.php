@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\CreateRequestTypeField;
+use App\Actions\DeleteRequestTypeField;
 use App\Actions\ReorderRequestTypeFields;
+use App\Actions\UpdateRequestTypeField;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ReorderRequestTypeFieldsRequest;
 use App\Http\Requests\Api\V1\StoreRequestTypeFieldRequest;
@@ -28,9 +30,9 @@ class RequestTypeFieldController extends Controller
         ], 201);
     }
 
-    public function update(UpdateRequestTypeFieldRequest $request, Workspace $workspace, RequestType $requestType, RequestTypeField $field): JsonResponse
+    public function update(UpdateRequestTypeFieldRequest $request, Workspace $workspace, RequestType $requestType, RequestTypeField $field, UpdateRequestTypeField $action): JsonResponse
     {
-        $field->update($request->validated());
+        $field = $action->handle($field, $request->validated());
 
         return response()->json([
             'data' => RequestTypeFieldResource::make($field->refresh())->resolve($request),
@@ -38,10 +40,10 @@ class RequestTypeFieldController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, Workspace $workspace, RequestType $requestType, RequestTypeField $field): JsonResponse
+    public function destroy(Request $request, Workspace $workspace, RequestType $requestType, RequestTypeField $field, DeleteRequestTypeField $action): JsonResponse
     {
         Gate::authorize('manageRequestTypes', $workspace);
-        $field->delete();
+        $action->handle($field);
 
         return response()->json(['data' => (object) [], 'message' => 'Request type field deleted successfully.']);
     }
