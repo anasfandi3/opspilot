@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ReportingController;
 use App\Http\Controllers\Api\V1\RequestActivityController;
 use App\Http\Controllers\Api\V1\RequestApprovalController;
 use App\Http\Controllers\Api\V1\RequestAttachmentController;
@@ -44,6 +45,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::post('workspaces/{workspace}/switch', [WorkspaceController::class, 'switchWorkspace'])->name('workspaces.switch');
             Route::post('workspaces/{workspace}/leave', [WorkspaceController::class, 'leave'])->name('workspaces.leave');
             Route::get('workspaces/{workspace}/members', [WorkspaceMemberController::class, 'index'])->name('workspaces.members.index');
+            Route::get('workspaces/{workspace}/dashboard', [ReportingController::class, 'dashboard'])->name('workspaces.dashboard');
+            Route::get('workspaces/{workspace}/reports/requests', [ReportingController::class, 'requests'])->name('workspaces.reports.requests');
+            Route::get('workspaces/{workspace}/reports/approvals', [ReportingController::class, 'approvals'])->name('workspaces.reports.approvals');
             Route::delete('workspaces/{workspace}/members/{user}', [WorkspaceMemberController::class, 'destroy'])->name('workspaces.members.destroy');
             Route::patch('workspaces/{workspace}/members/{user}/role', [WorkspaceMemberController::class, 'updateRole'])->name('workspaces.members.role.update');
             Route::scopeBindings()->group(function (): void {
