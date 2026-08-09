@@ -56,6 +56,12 @@ php artisan queue:work
 
 Configure a real mail transport for email delivery. The database notification channel remains available through the notification API.
 
+### First-party SPA authentication
+
+The Vue admin uses Sanctum session authentication. Configure `SANCTUM_STATEFUL_DOMAINS` with frontend hosts (including development ports), `CORS_ALLOWED_ORIGINS` with full frontend origins, and the `SESSION_DOMAIN`/secure-cookie settings appropriate for the deployment. The SPA must send credentials and XSRF headers with requests.
+
+The browser flow is `GET /sanctum/csrf-cookie`, `POST /api/v1/auth/session`, then authenticated `/api/v1/*` requests. Logout uses `POST /api/v1/auth/session/logout`. Existing `POST /api/v1/auth/login` bearer-token authentication remains available for non-browser API clients.
+
 ## Private attachments
 
 The defaults are:
@@ -98,11 +104,11 @@ vendor/bin/pint --test
 
 ## API overview
 
-All routes are under `/api/v1`. Auth registration and login are public; the remaining endpoints require a Sanctum bearer token.
+All routes are under `/api/v1`. Protected routes accept either a first-party Sanctum session or a Sanctum bearer token.
 
 | Area | Important routes |
 | --- | --- |
-| Auth | `POST auth/register`, `POST auth/login`, `POST auth/logout`, `GET/PATCH me`, `PUT me/password` |
+| Auth | `POST auth/register`, PAT `POST auth/login`/`POST auth/logout`, SPA `POST auth/session`/`POST auth/session/logout`, `GET/PATCH me`, `PUT me/password` |
 | Workspaces | `GET/POST workspaces`, `GET/PATCH workspaces/{workspace}`, member and current-workspace routes |
 | Invitations and roles | workspace invitations, invitation acceptance, member role update/removal |
 | Request types | request-type CRUD, field CRUD/reorder, and request catalog |
@@ -133,6 +139,7 @@ Conditional steps that do not match the submitted field snapshot are recorded as
 ## Security and tenancy
 
 - Nested scoped bindings and explicit workspace predicates isolate tenant data.
+- Workspace resources expose `permissions` calculated from the backend `WorkspaceRoleMap`; clients should not infer capabilities from role names.
 - Spatie's team ID is set per request and restored in a `finally` block for long-running-worker safety.
 - Policies require workspace-scoped permissions; auditors remain read-only and requesters cannot access workspace-wide reports.
 - Published workflow versions and runtime approval history are protected from mutation.
