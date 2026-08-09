@@ -8,7 +8,7 @@ import FeedbackOverlaySection from './ui/FeedbackOverlaySection.vue'
 import TableSection from './ui/TableSection.vue'
 </script>
 <template>
-  <AppShell
+  <AppShell demo
     ><PageHeader
       title="UI foundation"
       description="Reusable visual primitives and application patterns for future OpsPilot administration screens."

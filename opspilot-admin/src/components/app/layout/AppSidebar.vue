@@ -11,10 +11,11 @@ import {
   Users,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { RouterLink } from 'vue-router'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-defineProps<{ collapsed?: boolean }>()
-const emit = defineEmits<{ toggle: [] }>()
+defineProps<{ collapsed?: boolean; demo?: boolean }>()
+const emit = defineEmits<{ toggle: []; navigate: [] }>()
 const items = [
   [LayoutDashboard, 'Dashboard'],
   [FileStack, 'Requests'],
@@ -46,7 +47,19 @@ const items = [
         </div>
       </div>
       <nav class="flex-1 space-y-1 p-3" aria-label="Primary navigation">
-        <Tooltip v-for="([icon, label], index) in items" :key="label">
+        <Tooltip v-if="!demo">
+          <TooltipTrigger as-child
+            ><RouterLink
+              to="/home"
+              class="flex h-10 w-full items-center rounded-md bg-sidebar-accent text-sm font-medium text-sidebar-accent-foreground"
+              :class="collapsed ? 'justify-center' : 'gap-3 px-3'"
+              :aria-label="collapsed ? 'Home' : undefined"
+              @click="emit('navigate')"
+              ><LayoutDashboard class="size-4" /><span v-if="!collapsed">Home</span></RouterLink
+            ></TooltipTrigger
+          ><TooltipContent v-if="collapsed" side="right">Home</TooltipContent>
+        </Tooltip>
+        <Tooltip v-for="([icon, label], index) in demo ? items : []" :key="label">
           <TooltipTrigger as-child>
             <button
               type="button"
