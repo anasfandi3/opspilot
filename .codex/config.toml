@@ -1,0 +1,6 @@
+[mcp_servers.vue_docs]
+url = "https://mcp.vue-mcp.org/mcp"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
