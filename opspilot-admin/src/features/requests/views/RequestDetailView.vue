@@ -19,6 +19,8 @@ import ApprovalPlanSummary from '../components/ApprovalPlanSummary.vue'
 import { requestWorkspaceDestination } from '../workspaceBehavior'
 import { canApplyRequestResult } from '../workspaceBehavior'
 import { canCancelRequest, canEditRequest } from '../requestActions'
+import { canCollaborateOnRequest } from '../requestActions'
+import CollaborationSections from '../collaboration/CollaborationSections.vue'
 const route = useRoute(),
   router = useRouter(),
   workspace = useWorkspaceStore(),
@@ -112,6 +114,17 @@ const actionError = computed(() =>
       </section>
       <section>
         <h2 class="mb-4 text-lg font-semibold">Approval plan</h2>
-        <ApprovalPlanSummary :approvals="query.data.value.approvals" /></section></template
+        <ApprovalPlanSummary :approvals="query.data.value.approvals" />
+      </section>
+      <CollaborationSections
+        :request-id="query.data.value.id"
+        :can-collaborate="
+          canCollaborateOnRequest(
+            query.data.value,
+            auth.user?.id,
+            workspace.currentWorkspace?.role,
+            can,
+          )
+        " /></template
   ></AppShell>
 </template>

@@ -55,6 +55,22 @@ async function ensureCsrf(): Promise<void> {
   await request('/sanctum/csrf-cookie')
   csrfReady = true
 }
+
+export function contentDispositionFilename(header: string | null): string | null {
+  if (!header) return null
+  const encoded = header.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)?.[1]
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded.trim())
+    } catch {
+      // Fall through to the plain filename when the extended form is malformed.
+    }
+  }
+  const quoted = header.match(/filename\s*=\s*"((?:\\.|[^"])*)"/i)?.[1]
+  if (quoted) return quoted.replace(/\\([\\"])/g, '$1')
+  return header.match(/filename\s*=\s*([^;\s]+)/i)?.[1]?.trim() ?? null
+}
+
 export const apiClient = {
   get: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'GET' }),
@@ -78,6 +94,10 @@ export const apiClient = {
     await ensureCsrf()
     return request<T>(path, { method: 'DELETE' })
   },
+  upload: async <T>(path: string, body: FormData) => {
+    await ensureCsrf()
+    return request<T>(path, { method: 'POST', body })
+  },
   download: async (path: string) => {
     const response = await fetch(`${baseUrl}${path}`, {
       credentials: 'include',
@@ -92,7 +112,10 @@ export const apiClient = {
       if (error.kind === 'unauthenticated') await handleSessionExpiry()
       throw error
     }
-    return response.blob()
+    return {
+      blob: await response.blob(),
+      filename: contentDispositionFilename(response.headers.get('content-disposition')),
+    }
   },
   resetCsrf: () => {
     csrfReady = false

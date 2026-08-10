@@ -36,6 +36,24 @@ export function canCancelRequest(
   )
 }
 
+export function canCollaborateOnRequest(
+  request: RequestDetail,
+  currentUserId: number | null | undefined,
+  workspaceRole: string | null | undefined,
+  can: PermissionCheck,
+) {
+  if (currentUserId == null) return false
+  if (request.creator.id === currentUserId && can('requests.view_own')) return true
+  if (
+    can('approvals.view_assigned') &&
+    request.approvals.some((approval) =>
+      approval.assignees.some((assignee) => assignee.id === currentUserId),
+    )
+  )
+    return true
+  return (workspaceRole === 'owner' || workspaceRole === 'admin') && can('requests.view_all')
+}
+
 export interface RequestPersistenceInput {
   workspaceId: number
   requestId: number

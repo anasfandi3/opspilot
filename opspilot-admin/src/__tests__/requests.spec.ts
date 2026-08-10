@@ -15,6 +15,7 @@ import {
 } from '@/features/requests/workspaceBehavior'
 import {
   canCancelRequest,
+  canCollaborateOnRequest,
   canEditRequest,
   canSubmitRequest,
   PartialRequestSubmitError,
@@ -167,6 +168,52 @@ describe('requests foundation', () => {
     const canUpdate = (permission: string) => permission === 'requests.update_own'
     expect(canEditRequest(ownersDraft, 7, canUpdate)).toBe(true)
     expect(canEditRequest(ownersDraft, 8, canUpdate)).toBe(false)
+  })
+
+  it('mirrors collaboration policy inputs without inferring permissions from roles', () => {
+    const request = requestDetail({
+      creator: { id: 7, name: 'Creator', email: 'creator@example.test' },
+      approvals: [
+        {
+          id: 11,
+          position: 1,
+          status: 'approved',
+          workflow_step: { id: 5, name: 'Historical step' },
+          approver_type: 'user',
+          approver_role: null,
+          assignees: [{ id: 8, name: 'Historical approver' }],
+          decided_by: { id: 8, name: 'Historical approver' },
+          activated_at: '2026-08-10T00:00:00Z',
+          decided_at: '2026-08-10T01:00:00Z',
+        },
+      ],
+    })
+    const permits =
+      (...allowed: string[]) =>
+      (permission: string) =>
+        allowed.includes(permission)
+
+    expect(canCollaborateOnRequest(request, 7, 'requester', permits('requests.view_own'))).toBe(
+      true,
+    )
+    expect(canCollaborateOnRequest(request, 7, 'requester', permits())).toBe(false)
+    expect(
+      canCollaborateOnRequest(request, 8, 'approver', permits('approvals.view_assigned')),
+    ).toBe(true)
+    expect(
+      canCollaborateOnRequest(request, 9, 'approver', permits('approvals.view_assigned')),
+    ).toBe(false)
+    expect(canCollaborateOnRequest(request, 9, 'owner', permits('requests.view_all'))).toBe(true)
+    expect(canCollaborateOnRequest(request, 9, 'admin', permits('requests.view_all'))).toBe(true)
+    expect(canCollaborateOnRequest(request, 9, 'owner', permits())).toBe(false)
+    expect(canCollaborateOnRequest(request, 9, 'admin', permits())).toBe(false)
+    expect(canCollaborateOnRequest(request, 9, 'requester', permits('requests.view_all'))).toBe(
+      false,
+    )
+    expect(canCollaborateOnRequest(request, 9, 'auditor', permits('requests.view_all'))).toBe(false)
+    expect(canCollaborateOnRequest(request, null, 'owner', permits('requests.view_all'))).toBe(
+      false,
+    )
   })
 
   it('retains the persisted ID when create succeeds and submit fails', async () => {

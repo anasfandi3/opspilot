@@ -43,6 +43,27 @@ test('requester saves, reopens, and submits a typed request draft', async ({
     'Manager Approval',
   )
   await expect(page.getByRole('link', { name: 'Edit draft' })).toHaveCount(0)
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.getByLabel('Add comment').fill(`Collaboration note ${item}`)
+  await page.getByRole('button', { name: 'Add comment' }).click()
+  await expect(page.getByText(`Collaboration note ${item}`)).toBeVisible()
+  const attachmentName = `e2e-${browserName}-${Date.now()}.txt`
+  await page.getByLabel('Upload attachment').setInputFiles({
+    name: attachmentName,
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Disposable OpsPilot attachment'),
+  })
+  await page.locator('button').filter({ hasText: 'Upload attachment' }).click()
+  await expect(page.getByText(attachmentName, { exact: true })).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: `Download ${attachmentName}` }).click()
+  expect((await download).suggestedFilename()).toBe(attachmentName)
+  await expect(page.getByRole('heading', { name: 'Activity' }).locator('..')).toContainText(
+    'added a comment',
+  )
+  await expect(page.getByRole('heading', { name: 'Activity' }).locator('..')).toContainText(
+    `uploaded ${attachmentName}`,
+  )
   await page.getByRole('button', { name: 'Cancel request' }).click()
   const dialog = page.getByRole('alertdialog')
   await expect(dialog).toContainText('cancels the request and any active approval work')
