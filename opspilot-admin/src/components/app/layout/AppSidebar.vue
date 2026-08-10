@@ -19,6 +19,12 @@ defineProps<{ collapsed?: boolean; demo?: boolean }>()
 const emit = defineEmits<{ toggle: []; navigate: [] }>()
 const { can } = useAuthorization()
 const settingsItems = [
+  {
+    to: '/request-types',
+    label: 'Request Types',
+    icon: FileStack,
+    permission: 'request_types.view',
+  },
   { to: '/settings/workspace', label: 'Workspace', icon: Settings2, permission: 'workspace.view' },
   { to: '/settings/members', label: 'Members', icon: Users, permission: 'members.view' },
   {

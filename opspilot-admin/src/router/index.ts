@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { authRoutes } from '@/features/auth/routes'
 import { workspaceRoutes } from '@/features/workspaces/routes'
 import { memberRoutes } from '@/features/members/routes'
+import { requestTypeRoutes } from '@/features/request-types/routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,6 +11,7 @@ const router = createRouter({
     ...authRoutes,
     ...workspaceRoutes,
     ...memberRoutes,
+    ...requestTypeRoutes,
     {
       path: '/home',
       name: 'home',
