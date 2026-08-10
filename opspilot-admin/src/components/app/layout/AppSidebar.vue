@@ -19,11 +19,19 @@ defineProps<{ collapsed?: boolean; demo?: boolean }>()
 const emit = defineEmits<{ toggle: []; navigate: [] }>()
 const { can } = useAuthorization()
 const settingsItems = [
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'reports.view' },
   {
     to: '/requests',
     label: 'Requests',
     icon: FileStack,
     anyPermissions: ['requests.view_own', 'requests.view_all'],
+  },
+  { to: '/reports/requests', label: 'Request report', icon: BarChart3, permission: 'reports.view' },
+  {
+    to: '/reports/approvals',
+    label: 'Approval report',
+    icon: BarChart3,
+    permission: 'reports.view',
   },
   {
     to: '/approvals',

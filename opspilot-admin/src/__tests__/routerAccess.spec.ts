@@ -98,6 +98,45 @@ describe('router access helpers', () => {
     )
     expect(resolveAccessibleHome(router, () => false)).toBe('/approvals')
   })
+  it('lands on dashboard first and retains capability fallbacks', () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: '/dashboard',
+          name: 'dashboard',
+          component: {},
+          meta: { permission: 'reports.view' },
+        },
+        {
+          path: '/requests',
+          name: 'requests',
+          component: {},
+          meta: { permission: 'requests.view_own' },
+        },
+        {
+          path: '/approvals',
+          name: 'approvals',
+          component: {},
+          meta: { permission: 'approvals.view_assigned' },
+        },
+        { path: '/home', name: 'home', component: {} },
+      ],
+    })
+    expect(resolveAccessibleHome(router, (permission) => permission === 'reports.view')).toBe(
+      '/dashboard',
+    )
+    expect(resolveAccessibleHome(router, (permission) => permission === 'requests.view_own')).toBe(
+      '/requests',
+    )
+    expect(
+      resolveAccessibleHome(router, (permission) => permission === 'approvals.view_assigned'),
+    ).toBe('/approvals')
+    expect(resolveAccessibleHome(router, () => false)).toBe('/home')
+    expect(safeRedirect('/reports/requests?from=2026-01-01')).toBe(
+      '/reports/requests?from=2026-01-01',
+    )
+  })
   it('preserves the full destination when redirecting a guest', async () => {
     const { router, pinia } = guardedRouter()
     useAuthStore(pinia).$patch({ initialized: true, user: null })
