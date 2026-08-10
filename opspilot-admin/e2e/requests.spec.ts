@@ -5,7 +5,7 @@ async function login(page: Page, email: string) {
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill('password')
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page).toHaveURL(/\/(home|requests)$/)
+  await expect(page).toHaveURL(/\/(home|requests|approvals)$/)
 }
 
 test('requester saves, reopens, and submits a typed request draft', async ({

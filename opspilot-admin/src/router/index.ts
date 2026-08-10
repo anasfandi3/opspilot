@@ -5,6 +5,7 @@ import { memberRoutes } from '@/features/members/routes'
 import { requestTypeRoutes } from '@/features/request-types/routes'
 import { workflowRoutes } from '@/features/workflows/routes'
 import { requestRoutes } from '@/features/requests/routes'
+import { approvalRoutes } from '@/features/approvals/routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,6 +17,7 @@ const router = createRouter({
     ...requestTypeRoutes,
     ...workflowRoutes,
     ...requestRoutes,
+    ...approvalRoutes,
     {
       path: '/home',
       name: 'home',

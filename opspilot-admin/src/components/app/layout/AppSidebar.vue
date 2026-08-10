@@ -26,6 +26,12 @@ const settingsItems = [
     anyPermissions: ['requests.view_own', 'requests.view_all'],
   },
   {
+    to: '/approvals',
+    label: 'Approvals',
+    icon: CheckSquare,
+    permission: 'approvals.view_assigned',
+  },
+  {
     to: '/request-types',
     label: 'Request Types',
     icon: FileStack,
