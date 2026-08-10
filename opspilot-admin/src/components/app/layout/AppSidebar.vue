@@ -25,6 +25,7 @@ const settingsItems = [
     icon: FileStack,
     permission: 'request_types.view',
   },
+  { to: '/workflows', label: 'Workflows', icon: GitBranch, permission: 'workflows.view' },
   { to: '/settings/workspace', label: 'Workspace', icon: Settings2, permission: 'workspace.view' },
   { to: '/settings/members', label: 'Members', icon: Users, permission: 'members.view' },
   {
