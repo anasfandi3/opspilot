@@ -13,9 +13,21 @@ import {
 import { Button } from '@/components/ui/button'
 import { RouterLink } from 'vue-router'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useAuthorization } from '@/composables/useAuthorization'
 
 defineProps<{ collapsed?: boolean; demo?: boolean }>()
 const emit = defineEmits<{ toggle: []; navigate: [] }>()
+const { can } = useAuthorization()
+const settingsItems = [
+  { to: '/settings/workspace', label: 'Workspace', icon: Settings2, permission: 'workspace.view' },
+  { to: '/settings/members', label: 'Members', icon: Users, permission: 'members.view' },
+  {
+    to: '/settings/invitations',
+    label: 'Invitations',
+    icon: Users,
+    permission: 'invitations.view',
+  },
+] as const
 const items = [
   [LayoutDashboard, 'Dashboard'],
   [FileStack, 'Requests'],
@@ -59,6 +71,27 @@ const items = [
             ></TooltipTrigger
           ><TooltipContent v-if="collapsed" side="right">Home</TooltipContent>
         </Tooltip>
+        <template v-if="!demo">
+          <Tooltip
+            v-for="item in settingsItems.filter((entry) => can(entry.permission))"
+            :key="item.to"
+          >
+            <TooltipTrigger as-child
+              ><RouterLink
+                :to="item.to"
+                class="flex h-10 w-full items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                :class="collapsed ? 'justify-center' : 'gap-3 px-3'"
+                active-class="bg-sidebar-accent text-sidebar-accent-foreground"
+                :aria-label="collapsed ? item.label : undefined"
+                @click="emit('navigate')"
+                ><component :is="item.icon" class="size-4" /><span v-if="!collapsed">{{
+                  item.label
+                }}</span></RouterLink
+              ></TooltipTrigger
+            >
+            <TooltipContent v-if="collapsed" side="right">{{ item.label }}</TooltipContent>
+          </Tooltip>
+        </template>
         <Tooltip v-for="([icon, label], index) in demo ? items : []" :key="label">
           <TooltipTrigger as-child>
             <button

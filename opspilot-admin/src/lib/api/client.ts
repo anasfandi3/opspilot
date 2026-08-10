@@ -70,6 +70,14 @@ export const apiClient = {
       handleUnauthorized: options.handleUnauthorized,
     })
   },
+  patch: async <T>(path: string, body: unknown) => {
+    await ensureCsrf()
+    return request<T>(path, { method: 'PATCH', body: JSON.stringify(body) })
+  },
+  delete: async <T>(path: string) => {
+    await ensureCsrf()
+    return request<T>(path, { method: 'DELETE' })
+  },
   download: async (path: string) => {
     const response = await fetch(`${baseUrl}${path}`, {
       credentials: 'include',

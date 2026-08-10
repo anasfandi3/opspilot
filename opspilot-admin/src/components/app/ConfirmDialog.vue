@@ -19,20 +19,23 @@ withDefaults(
     cancelText?: string
     destructive?: boolean
     loading?: boolean
+    open?: boolean | null
   }>(),
-  { confirmText: 'Confirm', cancelText: 'Cancel' },
+  { confirmText: 'Confirm', cancelText: 'Cancel', open: null },
 )
-defineEmits<{ confirm: [] }>()
+defineEmits<{ confirm: []; cancel: []; 'update:open': [value: boolean] }>()
 </script>
 <template>
-  <AlertDialog
-    ><AlertDialogTrigger as-child><slot name="trigger" /></AlertDialogTrigger
+  <AlertDialog v-bind="open === null ? {} : { open }" @update:open="$emit('update:open', $event)"
+    ><AlertDialogTrigger v-if="$slots.trigger" as-child><slot name="trigger" /></AlertDialogTrigger
     ><AlertDialogContent
       ><AlertDialogHeader
         ><AlertDialogTitle>{{ title }}</AlertDialogTitle
         ><AlertDialogDescription>{{ description }}</AlertDialogDescription></AlertDialogHeader
       ><AlertDialogFooter
-        ><AlertDialogCancel :disabled="loading">{{ cancelText }}</AlertDialogCancel
+        ><AlertDialogCancel :disabled="loading" @click="$emit('cancel')">{{
+          cancelText
+        }}</AlertDialogCancel
         ><AlertDialogAction
           :disabled="loading"
           :class="destructive && 'bg-destructive text-white hover:bg-destructive/90'"

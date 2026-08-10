@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends { id: string }">
+<script setup lang="ts" generic="T extends { id: string | number }">
 import { computed, h } from 'vue'
 import {
   FlexRender,
@@ -43,8 +43,9 @@ const props = withDefaults(
     loading?: boolean
     pageSizes?: number[]
     selected?: RowSelectionState
+    selectable?: boolean
   }>(),
-  { pageSizes: () => [5, 10, 20, 50], selected: () => ({}) },
+  { pageSizes: () => [5, 10, 20, 50], selected: () => ({}), selectable: true },
 )
 const emit = defineEmits<{
   'update:page': [value: number]
@@ -73,7 +74,9 @@ const selectionColumn: ColumnDef<T> = {
     }),
   enableSorting: false,
 }
-const allColumns = computed(() => [selectionColumn, ...props.columns])
+const allColumns = computed(() =>
+  props.selectable ? [selectionColumn, ...props.columns] : props.columns,
+)
 const table = useVueTable({
   get data() {
     return props.data
@@ -93,8 +96,8 @@ const table = useVueTable({
       sorting: props.sort ? [{ id: props.sort, desc: props.direction === 'desc' }] : [],
     }
   },
-  getRowId: (row) => row.id,
-  enableRowSelection: true,
+  getRowId: (row) => String(row.id),
+  enableRowSelection: props.selectable,
   onRowSelectionChange: (updater: Updater<RowSelectionState>) =>
     emit('update:selected', typeof updater === 'function' ? updater(props.selected) : updater),
 })

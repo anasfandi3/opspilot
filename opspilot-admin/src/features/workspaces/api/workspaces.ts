@@ -8,4 +8,8 @@ export const workspaceApi = {
         csrf: true,
       })
     ).data,
+  detail: async (id: number) =>
+    (await apiClient.get<ApiEnvelope<Workspace>>(`/api/v1/workspaces/${id}`)).data,
+  update: async (id: number, input: { name: string }) =>
+    (await apiClient.patch<ApiEnvelope<Workspace>>(`/api/v1/workspaces/${id}`, input)).data,
 }

@@ -48,6 +48,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       switching.value = false
     }
   }
+  function updateWorkspace(updated: Workspace) {
+    workspaces.value = workspaces.value.map((workspace) =>
+      workspace.id === updated.id ? updated : workspace,
+    )
+    if (currentWorkspace.value?.id === updated.id) currentWorkspace.value = updated
+  }
   function reset() {
     workspaces.value = []
     currentWorkspace.value = null
@@ -63,6 +69,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     switching,
     initialize,
     selectWorkspace,
+    updateWorkspace,
     reset,
   }
 })
