@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import ThemeToggle from '@/components/app/ThemeToggle.vue'
 import WorkspaceSwitcher from '@/features/workspaces/components/WorkspaceSwitcher.vue'
+import NotificationBell from '@/features/notifications/components/NotificationBell.vue'
 import { useAuthStore } from '@/stores/auth'
 defineProps<{ demo?: boolean }>()
 defineEmits<{ menu: [] }>()
@@ -50,6 +51,7 @@ async function logout() {
       ><WorkspaceSwitcher v-else />
     </div>
     <div class="flex items-center gap-2">
+      <NotificationBell v-if="!demo" />
       <ThemeToggle />
       <div class="h-6 w-px bg-border" />
       <div v-if="demo" class="flex items-center gap-2">

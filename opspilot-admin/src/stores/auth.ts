@@ -5,6 +5,7 @@ import type { AuthUser, LoginCredentials } from '@/features/auth/types/auth'
 import { ApiError } from '@/lib/api/errors'
 import { queryClient } from '@/lib/queryClient'
 import { useWorkspaceStore } from './workspace'
+import { useNotificationStore } from './notifications'
 
 let bootstrapPromise: Promise<void> | null = null
 export const useAuthStore = defineStore('auth', () => {
@@ -39,6 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       initialized.value = true
       useWorkspaceStore().reset()
+      useNotificationStore().reset()
       queryClient.clear()
     }
   }
@@ -46,6 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     initialized.value = true
     useWorkspaceStore().reset()
+    useNotificationStore().reset()
     queryClient.clear()
   }
   function resetForTests() {

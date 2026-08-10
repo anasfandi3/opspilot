@@ -6,6 +6,7 @@ import { requestTypeRoutes } from '@/features/request-types/routes'
 import { workflowRoutes } from '@/features/workflows/routes'
 import { requestRoutes } from '@/features/requests/routes'
 import { approvalRoutes } from '@/features/approvals/routes'
+import { notificationRoutes } from '@/features/notifications/routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,6 +19,7 @@ const router = createRouter({
     ...workflowRoutes,
     ...requestRoutes,
     ...approvalRoutes,
+    ...notificationRoutes,
     {
       path: '/home',
       name: 'home',
