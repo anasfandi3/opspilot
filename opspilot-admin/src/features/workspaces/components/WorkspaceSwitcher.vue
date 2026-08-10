@@ -15,7 +15,10 @@ const store = useWorkspaceStore()
 <template>
   <DropdownMenu
     ><DropdownMenuTrigger as-child
-      ><Button variant="ghost" class="max-w-56 justify-start px-2" aria-label="Switch workspace"
+      ><Button
+        variant="ghost"
+        class="min-w-0 max-w-40 justify-start px-2 sm:max-w-56"
+        aria-label="Switch workspace"
         ><Building2 /><span class="truncate">{{
           store.currentWorkspace?.name ?? 'No workspace'
         }}</span

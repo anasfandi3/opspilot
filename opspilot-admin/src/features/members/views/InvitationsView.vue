@@ -36,6 +36,7 @@ import { invitationRoleOptions, roleLabel } from '../rolePresentation'
 import {
   invitationActionPermissions,
   invitationActionVisibility,
+  canApplyAdministrationResult,
   invitationCreateInput,
   invitationMutationInput,
   resetInvitationTransientState,
@@ -85,12 +86,14 @@ const createMutation = useMutation({
   mutationFn: (input: ReturnType<typeof invitationCreateInput>) =>
     invitationsApi.create(input.workspaceId, { email: input.email, role: input.role }),
   onSuccess: async (_, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     await client.invalidateQueries({ queryKey: invitationsKeys.list(input.workspaceId) })
     inviteOpen.value = false
     reset()
     toast.success('Invitation sent')
   },
-  onError: (e) => {
+  onError: (e, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     if (e instanceof ApiError) {
       form.emailError = e.fieldErrors.email?.[0] ?? ''
       form.roleError = e.fieldErrors.role?.[0] ?? ''
@@ -112,11 +115,13 @@ const revokeMutation = useMutation({
   mutationFn: (input: ReturnType<typeof invitationMutationInput>) =>
     invitationsApi.revoke(input.workspaceId, input.invitationId),
   onSuccess: async (_, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     await client.invalidateQueries({ queryKey: invitationsKeys.list(input.workspaceId) })
     revoking.value = null
     toast.success('Invitation revoked')
   },
-  onError: (e: Error) => {
+  onError: (e: Error, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     toast.error(e.message)
     revoking.value = null
   },
@@ -125,10 +130,13 @@ const resendMutation = useMutation({
   mutationFn: (input: ReturnType<typeof invitationMutationInput>) =>
     invitationsApi.resend(input.workspaceId, input.invitationId),
   onSuccess: async (_, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     await client.invalidateQueries({ queryKey: invitationsKeys.list(input.workspaceId) })
     toast.success('Invitation resent')
   },
-  onError: (e: Error) => toast.error(e.message),
+  onError: (e: Error, input) => {
+    if (canApplyAdministrationResult(input.workspaceId, workspaceId.value)) toast.error(e.message)
+  },
 })
 function actionCell(item: WorkspaceInvitation) {
   const visible = invitationActionVisibility(

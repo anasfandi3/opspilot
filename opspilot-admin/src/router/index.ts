@@ -8,6 +8,11 @@ import { requestRoutes } from '@/features/requests/routes'
 import { approvalRoutes } from '@/features/approvals/routes'
 import { notificationRoutes } from '@/features/notifications/routes'
 import { reportRoutes } from '@/features/reports/routes'
+import { updateDocumentTitle } from './titles'
+
+const developmentRoutes = import.meta.env.DEV
+  ? [{ path: '/ui', name: 'ui', component: () => import('@/views/UiPlaygroundView.vue') }]
+  : []
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,12 +37,19 @@ const router = createRouter({
       path: '/403',
       name: 'forbidden',
       component: () => import('@/views/ErrorView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresWorkspace: true },
     },
-    { path: '/404', name: 'not-found', component: () => import('@/views/ErrorView.vue') },
-    { path: '/ui', name: 'ui', component: () => import('@/views/UiPlaygroundView.vue') },
+    {
+      path: '/404',
+      name: 'not-found',
+      component: () => import('@/views/ErrorView.vue'),
+      meta: { requiresWorkspace: true },
+    },
+    ...developmentRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/404' },
   ],
 })
+
+router.afterEach(updateDocumentTitle)
 
 export default router

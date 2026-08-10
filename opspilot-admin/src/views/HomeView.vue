@@ -10,7 +10,7 @@ const workspace = useWorkspaceStore()
   <AppShell
     ><PageHeader
       title="Welcome to OpsPilot"
-      description="Your authenticated operations workspace is ready."
+      description="Choose an available area from the navigation to continue."
     /><Card
       ><CardContent class="flex items-center gap-4 pt-6"
         ><div class="rounded-lg bg-muted p-3"><Building2 class="size-5" /></div>
@@ -19,7 +19,7 @@ const workspace = useWorkspaceStore()
             {{ workspace.currentWorkspace?.name ?? 'No workspace available' }}
           </p>
           <p class="text-sm text-muted-foreground">
-            Business modules will be added in the next frontend patches.
+            You are working in this workspace. Available navigation reflects your permissions.
           </p>
         </div></CardContent
       ></Card

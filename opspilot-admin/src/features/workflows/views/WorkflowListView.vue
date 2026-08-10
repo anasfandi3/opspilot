@@ -29,6 +29,9 @@ const query = useQuery({
   queryFn: () => workflowsApi.all(workspaceId.value, types.data.value ?? []),
   enabled: computed(() => workspaceId.value > 0 && !!types.data.value),
 })
+function retry() {
+  void Promise.all([types.refetch(), query.refetch()])
+}
 const columns: ColumnDef<WorkflowListItem>[] = [
   {
     accessorKey: 'name',
@@ -96,6 +99,7 @@ const columns: ColumnDef<WorkflowListItem>[] = [
       class="rounded-lg border p-6 text-sm text-destructive"
     >
       {{ query.error.value?.message || types.error.value?.message }}
+      <Button class="ml-3" variant="outline" @click="retry">Retry</Button>
     </div>
     <DataTable
       v-else

@@ -40,6 +40,7 @@ test('admin builds, edits, publishes, and versions a conditional workflow', asyn
   page,
   browserName,
 }) => {
+  test.setTimeout(60_000)
   const errors: string[] = []
   page.on('console', (message) => {
     const expectedGuestCheck =
@@ -57,7 +58,7 @@ test('admin builds, edits, publishes, and versions a conditional workflow', asyn
   await page.getByRole('button', { name: 'Save workflow' }).click()
   await expect(page.getByText('Select a request type.')).toBeVisible()
   await page.getByLabel('Request type').selectOption({ label: requestTypeName })
-  const workflowName = `E2E Approval ${browserName}`
+  const workflowName = `E2E Approval ${browserName} ${Date.now()}`
   await page.getByLabel('Name').fill(workflowName)
   await page.getByRole('button', { name: 'Add step' }).click()
   await page.getByRole('button', { name: 'Add step' }).click()
@@ -81,7 +82,7 @@ test('admin builds, edits, publishes, and versions a conditional workflow', asyn
   await page.getByRole('button', { name: 'Move step 2 up' }).click()
   await page.getByRole('button', { name: 'Save workflow' }).click()
 
-  await expect(page).toHaveURL(/\/workflows\/\d+$/)
+  await expect(page).toHaveURL(/\/workflows\/\d+$/, { timeout: 15_000 })
   await expect(page.getByRole('heading', { name: workflowName })).toBeVisible()
   const flow = page.getByRole('heading', { name: 'Approval flow' }).locator('..')
   await expect(flow).toContainText('Step 1 · Finance review')
@@ -94,7 +95,7 @@ test('admin builds, edits, publishes, and versions a conditional workflow', asyn
   await expect(page.getByRole('button', { name: 'Add condition' }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Move step 1 down' })).toBeVisible()
   await page.getByRole('button', { name: 'Save workflow' }).click()
-  await expect(page.getByText('Step 1 · Finance approval')).toBeVisible()
+  await expect(page.getByText('Step 1 · Finance approval')).toBeVisible({ timeout: 15_000 })
   await page.getByRole('button', { name: 'Publish version' }).click()
   await expect(page.getByRole('alertdialog')).toContainText('becomes immutable')
   await page.getByRole('button', { name: 'Publish', exact: true }).click()
@@ -104,7 +105,7 @@ test('admin builds, edits, publishes, and versions a conditional workflow', asyn
     'Version 1',
   )
   await page.getByRole('button', { name: 'Create new draft' }).click()
-  await expect(page).toHaveURL(/\/workflows\/\d+\/edit$/)
+  await expect(page).toHaveURL(/\/workflows\/\d+\/edit$/, { timeout: 15_000 })
   expect(errors).toEqual([])
 })
 

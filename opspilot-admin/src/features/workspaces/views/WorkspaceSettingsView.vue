@@ -13,6 +13,11 @@ import { useAuthorization } from '@/composables/useAuthorization'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { workspaceApi } from '../api/workspaces'
 import { workspaceKeys } from '../queries/workspaceKeys'
+import {
+  canApplyWorkspaceResult,
+  workspaceUpdateInput,
+  type WorkspaceUpdateInput,
+} from '../workspaceBehavior'
 
 const store = useWorkspaceStore()
 const queryClient = useQueryClient()
@@ -32,14 +37,17 @@ watch(
   { immediate: true },
 )
 const mutation = useMutation({
-  mutationFn: () => workspaceApi.update(workspaceId.value, { name: form.name.trim() }),
-  onSuccess: async (workspace) => {
+  mutationFn: (input: WorkspaceUpdateInput) =>
+    workspaceApi.update(input.workspaceId, { name: input.name }),
+  onSuccess: async (workspace, input) => {
+    if (!canApplyWorkspaceResult(input.workspaceId, workspaceId.value)) return
     store.updateWorkspace(workspace)
     queryClient.setQueryData(workspaceKeys.detail(workspace.id), workspace)
     await queryClient.invalidateQueries({ queryKey: workspaceKeys.detail(workspace.id) })
     toast.success('Workspace updated')
   },
-  onError: (error) => {
+  onError: (error, input) => {
+    if (!canApplyWorkspaceResult(input.workspaceId, workspaceId.value)) return
     form.error = error instanceof ApiError ? (error.fieldErrors.name?.[0] ?? '') : ''
     form.general = error instanceof Error ? error.message : 'Unable to update workspace.'
   },
@@ -51,7 +59,7 @@ function save() {
     form.error = 'Workspace name is required.'
     return
   }
-  mutation.mutate()
+  mutation.mutate(workspaceUpdateInput(workspaceId.value, form.name.trim()))
 }
 </script>
 <template>

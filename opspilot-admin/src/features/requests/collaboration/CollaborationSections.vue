@@ -163,7 +163,10 @@ async function download(id: number, name: string) {
           addComment.isPending.value ? 'Adding…' : 'Add comment'
         }}</Button>
       </form>
-      <p v-if="comments.isError.value" class="text-sm text-destructive">Unable to load comments.</p>
+      <div v-if="comments.isError.value" class="text-sm text-destructive">
+        Unable to load comments.
+        <Button variant="link" class="h-auto p-0" @click="comments.refetch()">Retry</Button>
+      </div>
       <ul v-else class="space-y-3">
         <li
           v-for="comment in comments.data.value?.data ?? []"
@@ -211,9 +214,10 @@ async function download(id: number, name: string) {
         }}</Button>
       </div>
       <p v-if="sectionError" class="mb-3 text-sm text-destructive">{{ sectionError }}</p>
-      <p v-if="attachments.isError.value" class="text-sm text-destructive">
+      <div v-if="attachments.isError.value" class="text-sm text-destructive">
         Unable to load attachments.
-      </p>
+        <Button variant="link" class="h-auto p-0" @click="attachments.refetch()">Retry</Button>
+      </div>
       <ul v-else class="space-y-3">
         <li
           v-for="attachment in attachments.data.value?.data ?? []"
@@ -249,7 +253,10 @@ async function download(id: number, name: string) {
     </section>
     <section>
       <h2 class="mb-4 text-lg font-semibold">Activity</h2>
-      <p v-if="activity.isError.value" class="text-sm text-destructive">Unable to load activity.</p>
+      <div v-if="activity.isError.value" class="text-sm text-destructive">
+        Unable to load activity.
+        <Button variant="link" class="h-auto p-0" @click="activity.refetch()">Retry</Button>
+      </div>
       <ol v-else class="space-y-3">
         <li
           v-for="entry in activity.data.value?.data ?? []"

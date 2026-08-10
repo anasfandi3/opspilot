@@ -31,7 +31,12 @@ import { membersApi } from '../api/members'
 import { membersKeys } from '../queries/memberKeys'
 import { assignableRoles, roleLabel } from '../rolePresentation'
 import type { WorkspaceMember, WorkspaceRole } from '../types/member'
-import { memberRemovalInput, resetMemberTransientState, roleMutationInput } from '../administration'
+import {
+  canApplyAdministrationResult,
+  memberRemovalInput,
+  resetMemberTransientState,
+  roleMutationInput,
+} from '../administration'
 
 const workspace = useWorkspaceStore()
 const auth = useAuthStore()
@@ -76,21 +81,26 @@ const roleMutation = useMutation({
   mutationFn: (input: ReturnType<typeof roleMutationInput>) =>
     membersApi.updateRole(input.workspaceId, input.memberId, input.role),
   onSuccess: async (_, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     await client.invalidateQueries({ queryKey: membersKeys.list(input.workspaceId) })
     editing.value = null
     toast.success('Member role updated')
   },
-  onError: (e: Error) => (error.value = e.message),
+  onError: (e: Error, input) => {
+    if (canApplyAdministrationResult(input.workspaceId, workspaceId.value)) error.value = e.message
+  },
 })
 const removeMutation = useMutation({
   mutationFn: (input: ReturnType<typeof memberRemovalInput>) =>
     membersApi.remove(input.workspaceId, input.memberId),
   onSuccess: async (_, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     await client.invalidateQueries({ queryKey: membersKeys.list(input.workspaceId) })
     removing.value = null
     toast.success('Member removed')
   },
-  onError: (e: Error) => {
+  onError: (e: Error, input) => {
+    if (!canApplyAdministrationResult(input.workspaceId, workspaceId.value)) return
     toast.error(e.message)
     removing.value = null
   },

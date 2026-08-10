@@ -55,9 +55,10 @@ const actionError = computed(() =>
 <template>
   <AppShell
     ><LoadingState v-if="query.isPending.value" label="Loading request" />
-    <p v-else-if="query.isError.value" class="rounded-md border p-6 text-destructive">
-      {{ query.error.value?.message }}
-    </p>
+    <div v-else-if="query.isError.value" class="rounded-md border p-6 text-destructive">
+      <p>{{ query.error.value?.message }}</p>
+      <Button class="mt-3" variant="outline" @click="query.refetch()">Retry</Button>
+    </div>
     <template v-else-if="query.data.value"
       ><PageHeader
         :title="`Request #${query.data.value.id}`"

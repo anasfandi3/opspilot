@@ -85,9 +85,11 @@ const clone = useMutation({
     forceDiscard()
     await router.replace(`/workflows/${value.id}/edit`)
   },
-  onError: (error) =>
-    (generalError.value =
-      error instanceof Error ? error.message : 'Unable to create a draft version.'),
+  onError: (error, input) => {
+    if (!canApplyWorkflowResult(input.workspaceId, workspaceId.value)) return
+    generalError.value =
+      error instanceof Error ? error.message : 'Unable to create a draft version.'
+  },
 })
 watch(
   original,

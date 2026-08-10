@@ -39,6 +39,13 @@ export const invitationCreateInput = (
   role: InvitationRole,
 ) => ({ workspaceId, email, role })
 
+export function canApplyAdministrationResult(
+  sourceWorkspaceId: number,
+  currentWorkspaceId: number,
+) {
+  return sourceWorkspaceId === currentWorkspaceId
+}
+
 export function resetMemberTransientState(state: {
   editing: Ref<WorkspaceMember | null>
   removing: Ref<WorkspaceMember | null>
