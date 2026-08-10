@@ -11,13 +11,14 @@ import {
   Users,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthorization } from '@/composables/useAuthorization'
 
 defineProps<{ collapsed?: boolean; demo?: boolean }>()
 const emit = defineEmits<{ toggle: []; navigate: [] }>()
 const { can } = useAuthorization()
+const route = useRoute()
 const settingsItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'reports.view' },
   {
@@ -64,6 +65,11 @@ const items = [
   [Users, 'Members'],
   [BarChart3, 'Reports'],
 ] as const
+
+function isActive(path: string) {
+  if (path === '/home') return route.path === path
+  return route.path === path || route.path.startsWith(`${path}/`)
+}
 </script>
 
 <template>
@@ -90,8 +96,12 @@ const items = [
           <TooltipTrigger as-child
             ><RouterLink
               to="/home"
-              class="flex h-10 w-full items-center rounded-md bg-sidebar-accent text-sm font-medium text-sidebar-accent-foreground"
-              :class="collapsed ? 'justify-center' : 'gap-3 px-3'"
+              class="flex h-10 w-full items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              :class="[
+                collapsed ? 'justify-center' : 'gap-3 px-3',
+                isActive('/home') && 'bg-sidebar-accent text-sidebar-accent-foreground',
+              ]"
+              :aria-current="isActive('/home') ? 'page' : undefined"
               :aria-label="collapsed ? 'Home' : undefined"
               @click="emit('navigate')"
               ><LayoutDashboard class="size-4" /><span v-if="!collapsed">Home</span></RouterLink
@@ -111,8 +121,11 @@ const items = [
               ><RouterLink
                 :to="item.to"
                 class="flex h-10 w-full items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                :class="collapsed ? 'justify-center' : 'gap-3 px-3'"
-                active-class="bg-sidebar-accent text-sidebar-accent-foreground"
+                :class="[
+                  collapsed ? 'justify-center' : 'gap-3 px-3',
+                  isActive(item.to) && 'bg-sidebar-accent text-sidebar-accent-foreground',
+                ]"
+                :aria-current="isActive(item.to) ? 'page' : undefined"
                 :aria-label="collapsed ? item.label : undefined"
                 @click="emit('navigate')"
                 ><component :is="item.icon" class="size-4" /><span v-if="!collapsed">{{

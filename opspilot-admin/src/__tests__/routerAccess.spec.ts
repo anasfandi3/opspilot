@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { workspaceApi } from '@/features/workspaces/api/workspaces'
 import type { Workspace } from '@/features/workspaces/types/workspace'
+import { routeDocumentTitle } from '@/router/titles'
 
 vi.mock('@/features/workspaces/api/workspaces', () => ({
   workspaceApi: {
@@ -56,6 +57,11 @@ describe('router access helpers', () => {
     expect(safeRedirect('/home?tab=1')).toBe('/home?tab=1')
     expect(safeRedirect('//evil.test')).toBeNull()
     expect(safeRedirect('https://evil.test')).toBeNull()
+  })
+  it('uses concise product document titles for known and unknown routes', () => {
+    expect(routeDocumentTitle('requests-detail')).toBe('Request details · OpsPilot')
+    expect(routeDocumentTitle('not-found')).toBe('Page not found · OpsPilot')
+    expect(routeDocumentTitle(undefined)).toBe('OpsPilot')
   })
   it('selects the first registered accessible capability', () => {
     const router = createRouter({

@@ -43,6 +43,7 @@ const versions = computed(
     all.data.value?.filter((entry) => entry.requestType.id === item.value?.requestType.id) ?? [],
 )
 watch(workspaceId, (current, previous) => {
+  publishOpen.value = false
   const destination = workflowWorkspaceDestination(route.name)
   if (previous && current !== previous && destination) void router.replace(destination)
 })
@@ -55,8 +56,10 @@ const publish = useMutation({
     await client.invalidateQueries({ queryKey: workflowKeys.list(input.workspaceId) })
     toast.success('Workflow published')
   },
-  onError: (error) =>
-    toast.error(error instanceof Error ? error.message : 'Unable to publish workflow.'),
+  onError: (error, input) => {
+    if (!canApplyWorkflowResult(input.workspaceId, workspaceId.value)) return
+    toast.error(error instanceof Error ? error.message : 'Unable to publish workflow.')
+  },
 })
 function confirmPublish() {
   if (item.value)
@@ -66,12 +69,19 @@ function confirmPublish() {
       workflowId: item.value.id,
     })
 }
+function retry() {
+  void Promise.all([types.refetch(), all.refetch()])
+}
 </script>
 <template>
   <AppShell
     ><LoadingState v-if="types.isPending.value || all.isPending.value" label="Loading workflow" />
-    <div v-else-if="all.isError.value" class="rounded-lg border p-6 text-sm text-destructive">
-      {{ all.error.value?.message }}
+    <div
+      v-else-if="all.isError.value || types.isError.value"
+      class="rounded-lg border p-6 text-sm text-destructive"
+    >
+      <p>{{ all.error.value?.message || types.error.value?.message }}</p>
+      <Button class="mt-3" variant="outline" @click="retry">Retry</Button>
     </div>
     <template v-else-if="item"
       ><PageHeader :title="item.name" :description="item.description || 'No description provided.'"

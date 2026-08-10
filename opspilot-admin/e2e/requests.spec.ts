@@ -39,6 +39,9 @@ test('requester saves, reopens, and submits a typed request draft', async ({
   await expect(page).toHaveURL(/\/requests\/\d+$/)
   await expect(page.getByText('Submitted', { exact: true })).toBeVisible()
   await expect(page.getByText(item)).toBeVisible()
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await expect(page.getByRole('link', { name: 'Requests' })).toHaveAttribute('aria-current', 'page')
+  await page.keyboard.press('Escape')
   await expect(page.getByRole('heading', { name: 'Approval plan' }).locator('..')).toContainText(
     'Manager Approval',
   )

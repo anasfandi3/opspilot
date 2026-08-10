@@ -1,73 +1,45 @@
-# opspilot-admin
+# OpsPilot Admin
 
-This template should help get you started developing with Vue 3 in Vite.
+The OpsPilot admin SPA is the Vue 3 frontend for the multi-tenant Laravel workflow and approval application.
 
-## Recommended IDE Setup
+## Frontend architecture
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Vue 3, TypeScript, Composition API, Vite, and Vue Router
+- Tailwind CSS and shadcn-vue/reka-ui application components
+- Pinia for authenticated user and selected-workspace client context
+- TanStack Vue Query for workspace-scoped server state
+- Cookie-based Laravel Sanctum session authentication
+- URL-owned server table and report filters
 
-## Recommended Browser Setup
+Implemented areas include workspace administration, members and invitations, dynamic request types, versioned workflows, requests and approvals, comments, private authenticated attachments, activity, notifications, dashboard metrics, and reports.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+The `/ui` design-system playground is registered only by the development build and is not part of production navigation.
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Project setup
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
-
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## Verification
+
+Vitest covers stores, authorization, query keys, workspace safety, forms, and domain presentation helpers. Playwright exercises the real Laravel API across authentication, permission boundaries, administration, request and workflow lifecycles, collaboration, notifications, reports, and responsive navigation.
 
 ```sh
-npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-npm run build
-
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
+npm run type-check
 npm run lint
+npm run test:unit
+npm run build
+npm run test:e2e
+npx prettier --check src e2e
+```
+
+Install Playwright's portable browser builds before the first E2E run:
+
+```sh
+npx playwright install
 ```

@@ -75,7 +75,7 @@ test('requester follows backend request-type permission boundaries', async ({ pa
   await expect(page.getByRole('link', { name: 'Request Types' })).toHaveCount(0)
   await page.goto('/request-types')
   await expect(page).toHaveURL(/\/403$/)
-  await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: "You don't have access" })).toBeVisible()
   await page.goto('/request-types/create')
   await expect(page).toHaveURL(/\/403$/)
 })

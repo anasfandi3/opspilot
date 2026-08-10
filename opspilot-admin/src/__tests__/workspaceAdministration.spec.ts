@@ -8,6 +8,7 @@ import {
   roleLabel,
 } from '@/features/members/rolePresentation'
 import {
+  canApplyAdministrationResult,
   invitationActionVisibility,
   invitationCreateInput,
   invitationMutationInput,
@@ -15,6 +16,10 @@ import {
   resetMemberTransientState,
   roleMutationInput,
 } from '@/features/members/administration'
+import {
+  canApplyWorkspaceResult,
+  workspaceUpdateInput,
+} from '@/features/workspaces/workspaceBehavior'
 
 describe('workspace administration contracts', () => {
   it('uses workspace-scoped query keys', () => {
@@ -44,6 +49,16 @@ describe('workspace administration contracts', () => {
     expect(roleInput).toEqual({ workspaceId: 1, memberId: 10, role: 'auditor' })
     expect(inviteInput).toEqual({ workspaceId: 1, invitationId: 20 })
     expect(createInput.workspaceId).toBe(1)
+    expect(workspaceUpdateInput(1, 'Renamed workspace')).toEqual({
+      workspaceId: 1,
+      name: 'Renamed workspace',
+    })
+  })
+  it('ignores administration mutation results after workspace context changes', () => {
+    expect(canApplyAdministrationResult(1, 1)).toBe(true)
+    expect(canApplyAdministrationResult(1, 2)).toBe(false)
+    expect(canApplyWorkspaceResult(1, 1)).toBe(true)
+    expect(canApplyWorkspaceResult(1, 2)).toBe(false)
   })
   it('clears an open member target when workspace context changes', () => {
     const member = {

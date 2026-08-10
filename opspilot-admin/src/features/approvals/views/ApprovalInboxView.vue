@@ -185,9 +185,10 @@ const columns: ColumnDef<ApprovalInboxItem>[] = [
         </option>
       </select>
     </div>
-    <p v-if="query.isError.value" class="rounded-md border p-4 text-destructive">
-      {{ query.error.value?.message }}
-    </p>
+    <div v-if="query.isError.value" class="rounded-md border p-4 text-destructive">
+      <p>{{ query.error.value?.message }}</p>
+      <Button class="mt-3" variant="outline" @click="query.refetch()">Retry</Button>
+    </div>
     <DataTable
       v-else
       :columns="columns"
