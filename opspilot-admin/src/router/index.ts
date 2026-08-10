@@ -4,6 +4,7 @@ import { workspaceRoutes } from '@/features/workspaces/routes'
 import { memberRoutes } from '@/features/members/routes'
 import { requestTypeRoutes } from '@/features/request-types/routes'
 import { workflowRoutes } from '@/features/workflows/routes'
+import { requestRoutes } from '@/features/requests/routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +15,7 @@ const router = createRouter({
     ...memberRoutes,
     ...requestTypeRoutes,
     ...workflowRoutes,
+    ...requestRoutes,
     {
       path: '/home',
       name: 'home',

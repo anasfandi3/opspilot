@@ -20,6 +20,12 @@ const emit = defineEmits<{ toggle: []; navigate: [] }>()
 const { can } = useAuthorization()
 const settingsItems = [
   {
+    to: '/requests',
+    label: 'Requests',
+    icon: FileStack,
+    anyPermissions: ['requests.view_own', 'requests.view_all'],
+  },
+  {
     to: '/request-types',
     label: 'Request Types',
     icon: FileStack,
@@ -80,7 +86,11 @@ const items = [
         </Tooltip>
         <template v-if="!demo">
           <Tooltip
-            v-for="item in settingsItems.filter((entry) => can(entry.permission))"
+            v-for="item in settingsItems.filter((entry) =>
+              'anyPermissions' in entry
+                ? entry.anyPermissions.some((permission) => can(permission))
+                : can(entry.permission),
+            )"
             :key="item.to"
           >
             <TooltipTrigger as-child
